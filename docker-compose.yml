@@ -1,0 +1,7 @@
+version: '3'
+
+services:
+  demo-cikm2022:
+    build: .
+#    volumes:
+#      - ./volume:/volume
