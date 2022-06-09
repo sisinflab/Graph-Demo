@@ -18,7 +18,8 @@ print(u'''
 ''')
 
 while True:
-    model = str(input('Insert model name (ngcf, lightgcn, dgcf, lr-gccf, ultragcn, gfcf): '))
+    print('Insert model name (ngcf, lightgcn, dgcf, lr-gccf, ultragcn, gfcf):')
+    model = input()
     if model.lower() in ['ngcf', 'lightgcn', 'dgcf', 'lr-gccf', 'ultragcn', 'gfcf']:
         break
     else:
@@ -27,7 +28,8 @@ while True:
 print('\n\n')
 
 while True:
-    layer = str(input('Insert number of explored hops (0 for ultragcn and gfcf, 1, 2, 3, 4): '))
+    print('Insert number of explored hops (0 for ultragcn and gfcf, 1, 2, 3, 4 for the others): ')
+    layer = input()
     if layer.lower() in ['0', '1', '2', '3', '4']:
         break
     else:
@@ -46,7 +48,8 @@ print(u'''
 ''')
 
 while True:
-    dataset = str(input('Insert dataset name (movielens-1m, amazon digital music, epinions): '))
+    print('Insert dataset name (movielens-1m, amazon digital music, epinions):')
+    dataset = input()
     if dataset.lower() in ['movielens-1m', 'amazon digital music', 'epinions']:
         if dataset.lower() == 'movielens-1m':
             gdown.download_folder("https://drive.google.com/drive/folders/1ZIAFa63TAP76D5qSRaxltN0jBwO3aPbE",
