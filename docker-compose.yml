@@ -1,7 +1,8 @@
 version: '3'
 
 services:
-  demo-cikm2022:
+  demo-cikm-2022:
     build: .
-#    volumes:
-#      - ./volume:/volume
+    image: sisinflabpoliba/demo-cikm-2022
+    volumes:
+      - ./results:/Graph-Demo-CIKM2022/results
