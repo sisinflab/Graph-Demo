@@ -15,4 +15,4 @@ RUN apt-get update -y && \
 
 WORKDIR Graph-Demo-CIKM2022
 
-RUN python3.8 start_experiment.py
+RUN python3.8 start_experiments.py
