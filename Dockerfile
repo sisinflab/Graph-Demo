@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.5.1-cudnn8-devel-ubuntu20.04
+FROM nvidia/cuda:10.2-cudnn8-devel-ubuntu18.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -11,6 +11,6 @@ RUN apt-get update -y && \
     git clone https://github.com/sisinflab/Graph-Demo-CIKM2022.git && \
     pip install --upgrade pip && \
     pip install -r Graph-Demo-CIKM2022/requirements.txt && \
-    pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.11.0+cu115.html
+    pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.10.0+cu102.html
 
 WORKDIR Graph-Demo-CIKM2022
