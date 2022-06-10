@@ -1,0 +1,40 @@
+experiment:
+  backend: pytorch
+  data_config:
+    strategy: fixed
+    train_path: ../data/{0}/train.tsv
+    validation_path: ../data/{0}/val.tsv
+    test_path: ../data/{0}/test.tsv
+  dataset: movielens
+  top_k: 50
+  evaluation:
+    cutoffs: [10, 20, 50]
+    simple_metrics: [Recall, Precision, nDCG, EPC, EFD, Gini, SEntropy]
+  gpu: 0
+  external_models_path: ../external/models/__init__.py
+  models:
+    external.NGCF:
+      meta:
+        hyper_max_evals: 10
+        hyper_opt_alg: tpe
+        verbose: True
+        save_weights: False
+        save_recs: False
+        validation_rate: 1
+        validation_metric: Recall@20
+        restore: False
+      lr: [loguniform, -9.210340372, -5.298317367]
+      epochs: 400
+      factors: 64
+      batch_size: 1024
+      l_w: [loguniform, -9.210340372, 6.90775527898]
+      weight_size: 64
+      node_dropout: 0.0
+      message_dropout: 0.1
+      n_layers: 4
+      seed: 123
+      early_stopping:
+        patience: 10
+        monitor: Recall@20
+        mode: auto
+        verbose: True
