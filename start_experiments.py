@@ -18,8 +18,8 @@ print(u'''
 ''')
 
 while True:
-    model = input('Insert model name (ngcf, lightgcn, dgcf, lr-gccf, ultragcn, gfcf): ')
-    if model.lower() in ['ngcf', 'lightgcn', 'dgcf', 'lr-gccf', 'ultragcn', 'gfcf']:
+    model = input('Insert model name (ngcf, lightgcn, dgcf, lr-gccf, ultragcn, gfcf): ').lower()
+    if model in ['ngcf', 'lightgcn', 'dgcf', 'lr-gccf', 'ultragcn', 'gfcf']:
         break
     else:
         print('Sorry, the model should be one of these: ngcf, lightgcn, dgcf, lr-gccf, ultragcn, gfcf')
@@ -43,9 +43,9 @@ print(u'''
 ''')
 
 while True:
-    dataset = input('Insert dataset name (movielens-1m, amazon digital music, epinions): ')
-    if dataset.lower() in ['movielens-1m', 'amazon digital music', 'epinions']:
-        if dataset.lower() == 'movielens-1m':
+    dataset = input('Insert dataset name (movielens-1m, amazon digital music, epinions): ').lower()
+    if dataset in ['movielens-1m', 'amazon digital music', 'epinions']:
+        if dataset == 'movielens-1m':
             dataset = 'movielens'
             if not os.path.exists('data/movielens'):
                 os.makedirs('data/movielens')
@@ -56,7 +56,7 @@ while True:
                 for files in files_list:
                     shutil.move('movielens/' + files, 'data/movielens/')
                 os.rmdir('movielens')
-        elif dataset.lower() == 'epinions':
+        elif dataset == 'epinions':
             if not os.path.exists('data/epinions'):
                 os.makedirs('data/epinions')
                 gdown.download_folder("https://drive.google.com/drive/folders/1uj7X5PdaHTbES-YcoKnQMEuuiLAjC-_k",

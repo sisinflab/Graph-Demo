@@ -2,9 +2,9 @@ experiment:
   backend: pytorch
   data_config:
     strategy: fixed
-    train_path: ../data/{0}/train.tsv
-    validation_path: ../data/{0}/val.tsv
-    test_path: ../data/{0}/test.tsv
+    train_path: ../../data/{0}/train.tsv
+    validation_path: ../../data/{0}/val.tsv
+    test_path: ../../data/{0}/test.tsv
   dataset: amazon_music
   top_k: 50
   evaluation:
