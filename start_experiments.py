@@ -80,4 +80,4 @@ while True:
         print('Sorry, the dataset should be one of these: movielens-1m, amazon digital music, epinions')
 
 print('\n\n')
-run_experiment(f"config_files/{model}/{dataset}/{layer}.yml")
+run_experiment(f"config_files/{model}_{dataset}_{layer}.yml")
