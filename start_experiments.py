@@ -46,6 +46,7 @@ while True:
     dataset = input('Insert dataset name (movielens-1m, amazon digital music, epinions): ')
     if dataset.lower() in ['movielens-1m', 'amazon digital music', 'epinions']:
         if dataset.lower() == 'movielens-1m':
+            dataset = 'movielens'
             if not os.path.exists('data/movielens'):
                 os.makedirs('data/movielens')
                 gdown.download_folder("https://drive.google.com/drive/folders/1ZIAFa63TAP76D5qSRaxltN0jBwO3aPbE",
@@ -65,6 +66,7 @@ while True:
                 for files in files_list:
                     shutil.move('epinions/' + files, 'data/epinions/')
         else:
+            dataset = 'amazon_music'
             if not os.path.exists('data/amazon_music'):
                 os.makedirs('data/amazon_music')
                 gdown.download_folder("https://drive.google.com/drive/folders/1ABWWOE9PONypZw1qV80VrRu2T7QQicRn",
