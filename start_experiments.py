@@ -18,13 +18,11 @@ print(u'''
 ''')
 
 while True:
-    model = input('Insert model name (ngcf, lightgcn, dgcf, lr-gccf, ultragcn, gfcf):')
+    model = input('Insert model name (ngcf, lightgcn, dgcf, lr-gccf, ultragcn, gfcf): ')
     if model.lower() in ['ngcf', 'lightgcn', 'dgcf', 'lr-gccf', 'ultragcn', 'gfcf']:
         break
     else:
         print('Sorry, the model should be one of these: ngcf, lightgcn, dgcf, lr-gccf, ultragcn, gfcf')
-
-print('\n\n')
 
 while True:
     layer = input('Insert number of explored hops (0 for ultragcn and gfcf, 1, 2, 3, 4 for the others): ')
@@ -33,7 +31,6 @@ while True:
     else:
         print('Sorry, the number of explored hops should be one of these: 0, 1, 2, 3, 4')
 
-print('\n\n')
 print('DATASETS:')
 print(u'''
 +----------------------+--------+--------+--------------+
@@ -46,35 +43,36 @@ print(u'''
 ''')
 
 while True:
-    dataset = input('Insert dataset name (movielens-1m, amazon digital music, epinions):')
+    dataset = input('Insert dataset name (movielens-1m, amazon digital music, epinions): ')
     if dataset.lower() in ['movielens-1m', 'amazon digital music', 'epinions']:
         if dataset.lower() == 'movielens-1m':
-            gdown.download_folder("https://drive.google.com/drive/folders/1ZIAFa63TAP76D5qSRaxltN0jBwO3aPbE",
-                                  quiet=True, use_cookies=False)
             if not os.path.exists('data/movielens'):
                 os.makedirs('data/movielens')
-            files_list = os.listdir('movielens')
-            for files in files_list:
-                shutil.move(files, 'data/movielens/')
-            os.rmdir('movielens')
+                gdown.download_folder("https://drive.google.com/drive/folders/1ZIAFa63TAP76D5qSRaxltN0jBwO3aPbE",
+                                      use_cookies=False)
+
+                files_list = os.listdir('movielens')
+                for files in files_list:
+                    shutil.move('movielens/' + files, 'data/movielens/')
+                os.rmdir('movielens')
         elif dataset.lower() == 'epinions':
-            gdown.download_folder("https://drive.google.com/drive/folders/1uj7X5PdaHTbES-YcoKnQMEuuiLAjC-_k",
-                                  quiet=True, use_cookies=False)
             if not os.path.exists('data/epinions'):
                 os.makedirs('data/epinions')
-            files_list = os.listdir('epinions')
-            os.rmdir('epinions')
-            for files in files_list:
-                shutil.move(files, 'data/epinions/')
+                gdown.download_folder("https://drive.google.com/drive/folders/1uj7X5PdaHTbES-YcoKnQMEuuiLAjC-_k",
+                                      use_cookies=False)
+                files_list = os.listdir('epinions')
+                os.rmdir('epinions')
+                for files in files_list:
+                    shutil.move('epinions/' + files, 'data/epinions/')
         else:
             if not os.path.exists('data/amazon_music'):
                 os.makedirs('data/amazon_music')
-            gdown.download_folder("https://drive.google.com/drive/folders/1ABWWOE9PONypZw1qV80VrRu2T7QQicRn",
-                                  quiet=True, use_cookies=False)
-            files_list = os.listdir('amazon_music')
-            for files in files_list:
-                shutil.move(files, 'data/amazon_music/')
-            os.rmdir('amazon_music')
+                gdown.download_folder("https://drive.google.com/drive/folders/1ABWWOE9PONypZw1qV80VrRu2T7QQicRn",
+                                      use_cookies=False)
+                files_list = os.listdir('amazon_music')
+                for files in files_list:
+                    shutil.move('amazon_music/' + files, 'data/amazon_music/')
+                os.rmdir('amazon_music')
         break
     else:
         print('Sorry, the dataset should be one of these: movielens-1m, amazon digital music, epinions')
