@@ -1,3 +1,12 @@
+"""
+Module description:
+
+"""
+
+__version__ = '0.3.0'
+__author__ = 'Vito Walter Anelli, Claudio Pomo, Daniele Malitesta'
+__email__ = 'vitowalter.anelli@poliba.it, claudio.pomo@poliba.it, daniele.malitesta@poliba.it'
+
 from abc import ABC
 
 from .NGCFLayer import NGCFLayer
@@ -45,9 +54,9 @@ class NGCFModel(torch.nn.Module, ABC):
         self.l_w = l_w
         self.weight_size = weight_size
         self.n_layers = n_layers
-        self.node_dropout = node_dropout if node_dropout else [0.0] * self.n_layers
-        self.message_dropout = message_dropout if message_dropout else [0.0] * self.n_layers
-        self.weight_size_list = [self.embed_k] + self.weight_size
+        self.node_dropout = node_dropout
+        self.message_dropout = message_dropout
+        self.weight_size_list = [self.embed_k] + ([self.weight_size] * self.n_layers)
         self.edge_index = torch.tensor(edge_index, dtype=torch.int64)
 
         self.adj = SparseTensor(row=torch.cat([self.edge_index[0], self.edge_index[1]], dim=0),
@@ -55,62 +64,59 @@ class NGCFModel(torch.nn.Module, ABC):
                                 sparse_sizes=(self.num_users + self.num_items,
                                               self.num_users + self.num_items))
 
-        self.Gu = torch.nn.Parameter(
-            torch.nn.init.xavier_normal_(torch.empty((self.num_users, self.embed_k))))
+        self.Gu = torch.nn.Embedding(self.num_users, self.embed_k)
+        torch.nn.init.xavier_uniform_(self.Gu.weight)
         self.Gu.to(self.device)
-        self.Gi = torch.nn.Parameter(
-            torch.nn.init.xavier_normal_(torch.empty((self.num_items, self.embed_k))))
+        self.Gi = torch.nn.Embedding(self.num_items, self.embed_k)
+        torch.nn.init.xavier_uniform_(self.Gi.weight)
         self.Gi.to(self.device)
 
         propagation_network_list = []
         self.dropout_layers = []
 
         for layer in range(self.n_layers):
-            propagation_network_list.append((NodeDropout(self.node_dropout[layer],
+            propagation_network_list.append((NodeDropout(self.node_dropout,
                                                          self.num_users,
                                                          self.num_items),
                                              'edge_index -> edge_index'))
             propagation_network_list.append((NGCFLayer(self.weight_size_list[layer],
-                                                       self.weight_size_list[layer + 1]), 'x, edge_index -> x'))
-            self.dropout_layers.append(torch.nn.Dropout(p=self.message_dropout[layer]))
+                                                       self.weight_size_list[layer + 1],
+                                                       normalize=False), 'x, edge_index -> x'))
+            self.dropout_layers.append(torch.nn.Dropout(p=self.message_dropout))
 
         self.propagation_network = torch_geometric.nn.Sequential('x, edge_index', propagation_network_list)
         self.propagation_network.to(self.device)
-        self.softplus = torch.nn.Softplus()
+
+        # placeholder for calculated user and item embeddings
+        self.user_embeddings = torch.nn.init.xavier_uniform_(torch.rand((self.num_users, self.embed_k)))
+        self.user_embeddings.to(self.device)
+        self.item_embeddings = torch.nn.init.xavier_uniform_(torch.rand((self.num_items, self.embed_k)))
+        self.item_embeddings.to(self.device)
 
         self.optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
 
-    def propagate_embeddings(self, evaluate=False):
-        ego_embeddings = torch.cat((self.Gu.to(self.device), self.Gi.to(self.device)), 0)
+    def propagate_embeddings(self):
+        ego_embeddings = torch.cat((self.Gu.weight.to(self.device), self.Gi.weight.to(self.device)), 0)
         all_embeddings = [ego_embeddings]
         embedding_idx = 0
 
         for layer in range(0, self.n_layers * 2, 2):
-            if not evaluate:
-                dropout_edge_index = list(
-                    self.propagation_network.children()
-                )[layer](self.edge_index.to(self.device))
-                adj = SparseTensor(row=torch.cat([dropout_edge_index[0], dropout_edge_index[1]], dim=0),
-                                   col=torch.cat([dropout_edge_index[1], dropout_edge_index[0]], dim=0),
-                                   sparse_sizes=(self.num_users + self.num_items,
-                                                 self.num_users + self.num_items))
-                all_embeddings += [self.dropout_layers[embedding_idx](list(
-                    self.propagation_network.children()
-                )[layer + 1](all_embeddings[embedding_idx].to(self.device), adj.to(self.device)))]
-            else:
-                self.propagation_network.eval()
-                with torch.no_grad():
-                    all_embeddings += [list(
-                        self.propagation_network.children()
-                    )[layer + 1](all_embeddings[embedding_idx].to(self.device), self.adj.to(self.device))]
-
+            dropout_edge_index = list(
+                self.propagation_network.children()
+            )[layer](self.edge_index.to(self.device))
+            adj = SparseTensor(row=torch.cat([dropout_edge_index[0], dropout_edge_index[1]], dim=0),
+                               col=torch.cat([dropout_edge_index[1], dropout_edge_index[0]], dim=0),
+                               sparse_sizes=(self.num_users + self.num_items,
+                                             self.num_users + self.num_items))
+            all_embeddings += [torch.nn.functional.normalize(self.dropout_layers[embedding_idx](list(
+                self.propagation_network.children()
+            )[layer + 1](all_embeddings[embedding_idx].to(self.device), adj.to(self.device))), p=2, dim=1)]
             embedding_idx += 1
-
-        if evaluate:
-            self.propagation_network.train()
 
         all_embeddings = torch.cat(all_embeddings, 1)
         gu, gi = torch.split(all_embeddings, [self.num_users, self.num_items], 0)
+        self.user_embeddings = gu
+        self.item_embeddings = gi
         return gu, gi
 
     def forward(self, inputs, **kwargs):
@@ -120,23 +126,23 @@ class NGCFModel(torch.nn.Module, ABC):
 
         xui = torch.sum(gamma_u * gamma_i, 1)
 
-        return xui
+        return xui, gamma_u, gamma_i
 
-    def predict(self, gu, gi, **kwargs):
-        return torch.matmul(gu.to(self.device), torch.transpose(gi.to(self.device), 0, 1))
+    def predict(self, start, stop, **kwargs):
+        return torch.matmul(self.user_embeddings[start: stop].to(self.device),
+                            torch.transpose(self.item_embeddings.to(self.device), 0, 1))
 
     def train_step(self, batch):
         gu, gi = self.propagate_embeddings()
         user, pos, neg = batch
-        xu_pos = self.forward(inputs=(gu[user[:, 0]], gi[pos[:, 0]]))
-        xu_neg = self.forward(inputs=(gu[user[:, 0]], gi[neg[:, 0]]))
+        xu_pos, gamma_u, gamma_i_pos = self.forward(inputs=(gu[user], gi[pos]))
+        xu_neg, _, gamma_i_neg = self.forward(inputs=(gu[user], gi[neg]))
 
         difference = torch.clamp(xu_pos - xu_neg, -80.0, 1e8)
-        loss = torch.sum(self.softplus(-difference))
-        reg_loss = self.l_w * (torch.norm(self.Gu, 2) +
-                               torch.norm(self.Gi, 2) +
-                               torch.stack([torch.norm(value, 2) for value in self.propagation_network.parameters()],
-                                           dim=0).sum(dim=0))
+        loss = torch.mean(torch.nn.functional.softplus(-difference))
+        reg_loss = self.l_w * (1 / 2) * (gamma_u.norm(2).pow(2) +
+                                         gamma_i_pos.norm(2).pow(2) +
+                                         gamma_i_neg.norm(2).pow(2)) / user.shape[0]
         loss += reg_loss
 
         self.optimizer.zero_grad()
