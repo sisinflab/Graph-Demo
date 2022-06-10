@@ -2,7 +2,10 @@ version: '3'
 
 services:
   demo-cikm-2022:
-    build: .
     image: sisinflabpoliba/demo-cikm-2022
+    build: ./
+    tty: true
+    stdin_open: true
+    command: python3.8 start_experiments.py
     volumes:
       - ./results:/Graph-Demo-CIKM2022/results

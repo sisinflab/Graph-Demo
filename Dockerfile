@@ -14,5 +14,3 @@ RUN apt-get update -y && \
     pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.11.0+cu115.html
 
 WORKDIR Graph-Demo-CIKM2022
-
-RUN python3.8 start_experiments.py
