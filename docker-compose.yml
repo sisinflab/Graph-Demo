@@ -3,7 +3,6 @@ version: '3'
 services:
   demo-cikm-2022:
     image: sisinflabpoliba/demo-cikm-2022
-    build: ./
     tty: true
     stdin_open: true
     command: python3.8 start_experiments.py
