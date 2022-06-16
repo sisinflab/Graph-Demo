@@ -194,10 +194,27 @@ git clone https://github.com/sisinflab/Graph-Demo-CIKM2022.git
 cd Graph-Demo-CIKM2022/
 ```
 
-### 1. Train and evaluate NGCF
+### 1. Train and evaluate NGCF (explicit message-passing)
 ```
 sudo docker compose run demo-cikm-2022
 ```
+Then, select:
+
+- Model: ```ngcf```
+- Number of explore hops: ```3```
+- Dataset: ```amazon digital music```
+
+
+### 2. Train and evaluate GFCF (no message-passing)
+```
+sudo docker compose run demo-cikm-2022
+```
+Then, select:
+
+- Model: ```gfcf```
+- Number of explore hops: ```0```
+- Dataset: ```amazon digital music```
+
 
 ## Video Tutorial
 If you need a practical guide to install and launch our application, click on the image below to go to the video tutorial on YouTube.
