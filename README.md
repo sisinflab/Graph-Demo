@@ -204,8 +204,6 @@ Then, select:
 - Number of explore hops: ```3```
 - Dataset: ```amazon digital music```
 
-![Alt Text](ngcf.gif)
-
 
 ### 2. Train and evaluate GFCF (no message-passing)
 ```
