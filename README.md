@@ -220,7 +220,7 @@ If everything works smoothly, this are the expected outputs:
 
 ### Recommendation Accuracy
 <figure>
-    <img src="accuracy.png"/>
+    <img src="https://github.com/sisinflab/Graph-Demo-CIKM2022/blob/main/accuracy.png"/>
 </figure>
 
 ## Video Tutorial
