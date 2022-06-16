@@ -166,7 +166,7 @@ Docker Compose version v2.6.0
 ## Video Tutorial
 If you need a practical guide to install and launch our application, click on the image below to go to the video tutorial on YouTube.
 
-<a href="https://www.youtube.com/watch?v=2Lx3kPO680I"><img src="video.png" align="left" width="50%"></a>
+<a href="https://www.youtube.com/watch?v=2Lx3kPO680I"><img src="video.png" align="left"></a>
 
 ## Contacts
 - Vito Walter Anelli (vitowalter.anelli@poliba.it)
