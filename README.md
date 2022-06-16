@@ -215,14 +215,6 @@ Then, select:
 - Number of explore hops: ```0```
 - Dataset: ```amazon digital music```
 
-## Results
-If everything works smoothly, this are the expected outputs:
-
-### Recommendation Accuracy
-<figure>
-    <img src="https://github.com/sisinflab/Graph-Demo-CIKM2022/blob/main/accuracy.png"/>
-</figure>
-
 ## Video Tutorial
 If you need a practical guide to install and launch our application, click on the image below to go to the video tutorial on YouTube.
 
