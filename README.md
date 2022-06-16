@@ -219,16 +219,6 @@ Then, select:
 If everything works smoothly, this are the expected outputs:
 
 ### Recommendation Accuracy
-| \multicolumn{ 1}{l}{\textbf{Models}} | \multicolumn{ 3}{c}{\textbf{Movielens-1M}} | \multicolumn{ 3}{c}{\textbf{Amazon Digital Music}} | \multicolumn{ 3}{c}{\textbf{Epinions}} |
-|--------------------------------------|--------------------------------------------|----------------------------------------------------|----------------------------------------|
-| \multicolumn{ 1}{c}{}                | \multicolumn{1}{c}{\textit{Rec}}           | \multicolumn{1}{c}{\textit{Prec}}                  | \multicolumn{1}{c}{\textit{nDCG}}      | \multicolumn{1}{c}{\textit{Rec}} | \multicolumn{1}{c}{\textit{Prec}} | \multicolumn{1}{c}{\textit{nDCG}} | \multicolumn{1}{c}{\textit{Rec}} | \multicolumn{1}{c}{\textit{Prec}} | \multicolumn{1}{c}{\textit{nDCG}} |
-| NGCF                                 | 0.2535                                     | 0.0985                                             | 0.1985                                 | 0.1127                           | 0.0080                            | 0.0606                            | 0.0792                           | 0.0083                            | 0.0394                            |
-| LightGCN                             | 0.2712                                     | 0.1057                                             | 0.2167                                 | 0.1189                           | 0.0085                            | 0.0628                            | 0.0914                           | 0.0098                            | 0.0466                            |
-| DGCF                                 | \underline{0.2791}                         | \underline{0.1091}                                 | \underline{0.2231}                     | \underline{0.1264}               | \underline{0.0091}                | 0.0674                            | \textbf{0.1046}                  | \textbf{0.0113}                   | \underline{0.0536}                |
-| LR-GCCF                              | \textbf{0.2876}                            | \textbf{0.1105}                                    | \textbf{0.2274}                        | 0.1246                           | 0.0089                            | 0.0664                            | 0.0990                           | 0.0106                            | 0.0504                            |
-| UltraGCN                             | 0.2540                                     | 0.0972                                             | 0.2045                                 | 0.1256                           | 0.0089                            | \underline{0.0675}                | \underline{0.1041}               | \underline{0.0111}                | \textbf{0.0541}                   |
-| GFCF                                 | 0.1685                                     | 0.0682                                             | 0.1398                                 | \textbf{0.1287}                  | \textbf{0.0094}                   | \textbf{0.0744}                   | 0.0946                           | 0.0097                            | 0.0496                            |
-
 
 
 ## Video Tutorial
