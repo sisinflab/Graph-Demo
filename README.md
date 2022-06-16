@@ -167,3 +167,10 @@ Docker Compose version v2.6.0
 If you need a practical guide to install and launch our application, click on the image below to go to the video tutorial on YouTube.
 
 <a href="https://www.youtube.com/watch?v=2Lx3kPO680I"><img src="video.png" align="left" width="50%"></a>
+
+## Contacts
+- Vito Walter Anelli (vitowalter.anelli@poliba.it)
+- Tommaso Di Noia (tommaso.dinoia@poliba.it)
+- Antonio Ferrara (antonio.ferrara@poliba.it)
+- Daniele Malitesta (daniele.malitesta@poliba.it)
+- Claudio Pomo (claudio.pomo@poliba.it)
