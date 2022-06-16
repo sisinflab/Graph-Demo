@@ -17,4 +17,4 @@ This is the official implementation of the paper _Graph Collaborative Filtering 
 
 
 ## Video Tutorial
-[![Go to video](video.png)](https://www.youtube.com/embed/tgbNymZ7vqY | width=100)
+[![Go to video](video.png | width=100)](https://www.youtube.com/embed/tgbNymZ7vqY)
