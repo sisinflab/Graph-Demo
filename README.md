@@ -12,4 +12,5 @@ This is the official implementation of the paper _Graph Collaborative Filtering 
 - [Demo Datasets](#demo-datasets)
 - [Running Examples](#running-examples)
 - [Results](#results)
+- [Video Tutoria](#video-tutorial)
 - [Contacts](#contacts)
