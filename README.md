@@ -142,6 +142,27 @@ Expected output:
 +-----------------------------------------------------------------------------+
 ```
 
+### 3. Install Docker Compose
+Reference link: https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-22-04
+
+Commands:
+```
+mkdir -p ~/.docker/cli-plugins/
+```
+
+```
+curl -SL https://github.com/docker/compose/releases/download/v2.6.0/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+```
+
+```
+docker compose version
+```
+
+Expected output:
+```
+Docker Compose version v2.6.0
+```
+
 ## Video Tutorial
 If you need a practical guide to install and launch our application, click on the image below to go to the video tutorial on YouTube.
 
