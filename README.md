@@ -14,3 +14,7 @@ This is the official implementation of the paper _Graph Collaborative Filtering 
 - [Results](#results)
 - [Video Tutoria](#video-tutorial)
 - [Contacts](#contacts)
+
+
+## Video Tutorial
+[![Go to the video]()](https://www.youtube.com/watch?v=2Lx3kPO680I)
