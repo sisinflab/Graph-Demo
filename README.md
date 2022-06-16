@@ -17,6 +17,4 @@ This is the official implementation of the paper _Graph Collaborative Filtering 
 
 
 ## Video Tutorial
-<iframe width="420" height="315"
-src="[https://www.youtube.com/embed/tgbNymZ7vqY](https://www.youtube.com/watch?v=2Lx3kPO680I)">
-</iframe>
+![Go to video](video.png)](https://www.youtube.com/embed/tgbNymZ7vqY)
