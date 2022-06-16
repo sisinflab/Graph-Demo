@@ -219,7 +219,9 @@ Then, select:
 If everything works smoothly, this are the expected outputs:
 
 ### Recommendation Accuracy
-
+<figure>
+    <img src="accuracy.png"/>
+</figure>
 
 ## Video Tutorial
 If you need a practical guide to install and launch our application, click on the image below to go to the video tutorial on YouTube.
