@@ -1,6 +1,6 @@
-# Graph Collaborative Filtering in Elliot: from Reproducibility to Hyperparameter Exploration
+# A Ready-to-Use Application for Reproducible and Extensive Assessment of Graph Recommender Systems in Elliot
 
-This is the official implementation of the paper _Graph Collaborative Filtering in Elliot: from Reproducibility to Hyperparameter Exploration_, under review as demo paper at CIKM 2022.
+This is the official implementation of the paper _A Ready-to-Use Application for Reproducible and Extensive Assessment of Graph Recommender Systems in Elliot_, under review as demo paper at CIKM 2022.
 
 **Authors**: Vito Walter Anelli, Tommaso Di Noia, Antonio Ferrara, Daniele Malitesta, Claudio Pomo
 
