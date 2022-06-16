@@ -181,6 +181,24 @@ Docker Compose version v2.6.0
 | Amazon Digital Music | 8,328     | 6,275     | 99,400           | https://jmcauley.ucsd.edu/data/amazon/            | [link](https://drive.google.com/drive/folders/1ABWWOE9PONypZw1qV80VrRu2T7QQicRn) |
 | Epinions             | 14,341    | 13,145    | 269,170          | https://snap.stanford.edu/data/soc-Epinions1.html | [link](https://drive.google.com/drive/folders/1uj7X5PdaHTbES-YcoKnQMEuuiLAjC-_k) |
 
+## Running Examples
+Here, we provide two possible examples to run and test our application.
+
+First, let us clone this GitHub repository so that we can access to the YAML docker compose file.
+
+```
+git clone https://github.com/sisinflab/Graph-Demo-CIKM2022.git
+```
+
+```
+cd Graph-Demo-CIKM2022/
+```
+
+### 1. Train and evaluate NGCF
+```
+sudo docker compose run demo-cikm-2022
+```
+
 ## Video Tutorial
 If you need a practical guide to install and launch our application, click on the image below to go to the video tutorial on YouTube.
 
