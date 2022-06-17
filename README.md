@@ -1,6 +1,6 @@
-# A Ready-to-Use Application for Reproducible and Extensive Assessment of Graph Recommender Systems in Elliot
+# An Out-of-the-Box Application for Reproducible Graph Collaborative Filtering extending the Elliot Framework
 
-This is the official implementation of the paper _A Ready-to-Use Application for Reproducible and Extensive Assessment of Graph Recommender Systems in Elliot_, under review as demo paper at CIKM 2022.
+This is the official implementation of the paper _An Out-of-the-Box Application for Reproducible Graph Collaborative Filtering extending the Elliot Framework_, under review as demo paper at CIKM 2022.
 
 **Authors**: Vito Walter Anelli, Tommaso Di Noia, Antonio Ferrara, Daniele Malitesta, Claudio Pomo
 
