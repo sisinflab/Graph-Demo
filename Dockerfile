@@ -14,6 +14,6 @@ RUN apt-key del 7fa2af80 && \
     git clone https://github.com/sisinflab/Graph-Demo-WSDM2023.git && \
     pip install --upgrade pip && \
     pip install -r Graph-Demo-WSDM2023/requirements.txt && \
-    pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.10.0+cu102.html
+    pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.11.0+cu102.html
 
 WORKDIR Graph-Demo-WSDM2023
