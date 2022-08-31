@@ -204,7 +204,7 @@ sudo docker compose run demo-graph
 Then, select:
 
 - Model: ```ngcf```
-- Number of explore hops: ```3```
+- Number of explored hops: ```3```
 - Dataset: ```amazon digital music```
 
 
@@ -215,7 +215,7 @@ sudo docker compose run demo-graph
 Then, select:
 
 - Model: ```gfcf```
-- Number of explore hops: ```0```
+- Number of explored hops: ```0```
 - Dataset: ```amazon digital music```
 
 ## Video Tutorial
