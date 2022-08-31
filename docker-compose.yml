@@ -1,8 +1,8 @@
 version: '3'
 
 services:
-  demo-cikm-2022:
-    image: sisinflabpoliba/demo-cikm-2022
+  demo-graph:
+    image: sisinflabpoliba/demo-graph
     tty: true
     stdin_open: true
     command: python3.8 start_experiments.py
@@ -12,4 +12,4 @@ services:
           devices:
             - capabilities: [gpu]
     volumes:
-      - ./results:/Graph-Demo-CIKM2022/results
+      - ./results:/Graph-Demo-WSDM2023/results
