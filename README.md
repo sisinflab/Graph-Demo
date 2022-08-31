@@ -223,7 +223,7 @@ If you need a practical guide to install and launch our application, click on th
 
 Video link: https://youtu.be/Zeet08LNVBg
 
-<a href="https://youtu.be/Zeet08LNVBg"><img src="video.png" align="left"></a>
+<a href="https://youtu.be/Zeet08LNVBg"><img src="video_wsdm.png" align="left"></a>
 
 ## Contacts
 - Vito Walter Anelli (vitowalter.anelli@poliba.it)
