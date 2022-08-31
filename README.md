@@ -186,16 +186,16 @@ Here, we provide two possible examples to run and test our application.
 First, let us clone this GitHub repository so that we can access to the YAML docker compose file.
 
 ```
-git clone https://github.com/sisinflab/Graph-Demo-CIKM2022.git
+git clone https://github.com/sisinflab/Graph-Demo-WSDM2023.git
 ```
 
 ```
-cd Graph-Demo-CIKM2022/
+cd Graph-Demo-WSDM2023/
 ```
 
 ### 1. Train and evaluate NGCF (explicit message-passing)
 ```
-sudo docker compose run demo-cikm-2022
+sudo docker compose run demo-graph
 ```
 Then, select:
 
@@ -206,7 +206,7 @@ Then, select:
 
 ### 2. Train and evaluate GFCF (no message-passing)
 ```
-sudo docker compose run demo-cikm-2022
+sudo docker compose run demo-graph
 ```
 Then, select:
 
