@@ -2,11 +2,16 @@ hyperopt
 numpy
 --extra-index-url https://download.pytorch.org/whl/cu102
 torch==1.12.0+cu102
-torch_geometric -f https://data.pyg.org/whl/torch-1.12.0+cu102.html
-torch-scatter -f https://data.pyg.org/whl/torch-1.12.0+cu102.html
-torch_sparse -f https://data.pyg.org/whl/torch-1.12.0+cu102.html
-torch_cluster -f https://data.pyg.org/whl/torch-1.12.0+cu102.html
-torch_spline_conv -f https://data.pyg.org/whl/torch-1.12.0+cu102.html
+-f https://data.pyg.org/whl/torch-1.12.0+cu102.html
+torch_geometric
+-f https://data.pyg.org/whl/torch-1.12.0+cu102.html
+torch-scatter
+-f https://data.pyg.org/whl/torch-1.12.0+cu102.html
+torch_sparse
+-f https://data.pyg.org/whl/torch-1.12.0+cu102.html
+torch_cluster
+-f https://data.pyg.org/whl/torch-1.12.0+cu102.html
+torch_spline_conv
 tensorflow
 tqdm
 scipy
