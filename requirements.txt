@@ -11,4 +11,3 @@ PyYAML
 scikit_learn
 sparsesvd==0.2.1
 gdown
--r requirements_torch_geometric.txt
