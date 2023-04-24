@@ -1,11 +1,12 @@
 hyperopt
 numpy
-torch==1.11.0
-torch-scatter -f https://data.pyg.org/whl/torch-1.11.0+cu102.html
-torch-sparse -f https://data.pyg.org/whl/torch-1.11.0+cu102.html
-torch-cluster -f https://data.pyg.org/whl/torch-1.11.0+cu102.html
-torch-spline-conv -f https://data.pyg.org/whl/torch-1.11.0+cu102.html
-torch-geometric -f https://data.pyg.org/whl/torch-1.11.0+cu102.html
+torch --index-url https://download.pytorch.org/whl/cu118
+pyg_lib -f https://data.pyg.org/whl/torch-2.0.0+cu118.html
+torch-scatter -f https://data.pyg.org/whl/torch-2.0.0+cu118.html
+torch_scatter -f https://data.pyg.org/whl/torch-2.0.0+cu118.html
+torch_sparse -f https://data.pyg.org/whl/torch-2.0.0+cu118.html
+torch_cluster -f https://data.pyg.org/whl/torch-2.0.0+cu118.html
+torch_spline_conv -f https://data.pyg.org/whl/torch-2.0.0+cu118.html
 tensorflow
 tqdm
 scipy
