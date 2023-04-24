@@ -5,79 +5,70 @@ import shutil
 
 print('MODELS:')
 print(u'''
-+--------------------------------------------------------------------------------------------------------+----------+--------------------------------------------------------+
-|                                                 Paper                                                  |   Name   |                          Link                          |
-+--------------------------------------------------------------------------------------------------------+----------+--------------------------------------------------------+
-| Neural Graph Collaborative Filtering                                                                   | ngcf     | https://dl.acm.org/doi/10.1145/3331184.3331267         |
-| LightGCN: Simplifying and Powering Graph Convolution Network for Recommendation                        | lightgcn | https://dl.acm.org/doi/10.1145/3397271.3401063         |
-| Disentangled Graph Collaborative Filtering                                                             | dgcf     | https://dl.acm.org/doi/abs/10.1145/3397271.3401137     |
-| Revisiting Graph Based Collaborative Filtering: A Linear Residual Graph Convolutional Network Approach | lr-gccf  | https://ojs.aaai.org//index.php/AAAI/article/view/5330 |
-| UltraGCN: Ultra Simplification of Graph Convolutional Networks for Recommendation                      | ultragcn | https://dl.acm.org/doi/10.1145/3459637.3482291         |
-| How Powerful is Graph Convolution for Recommendation?                                                  | gfcf     | https://dl.acm.org/doi/abs/10.1145/3459637.3482264     |
-+--------------------------------------------------------------------------------------------------------+----------+--------------------------------------------------------+
++-----------------------------------------------------------------------------------+----------+--------------------------------------------------------+
+|                                                 Paper                             |   Name   |                          Link                          |
++-----------------------------------------------------------------------------------+----------+--------------------------------------------------------+
+| Neural Graph Collaborative Filtering                                              | ngcf     | https://dl.acm.org/doi/10.1145/3331184.3331267         |
+| Disentangled Graph Collaborative Filtering                                        | dgcf     | https://dl.acm.org/doi/abs/10.1145/3397271.3401137     |
+| LightGCN: Simplifying and Powering Graph Convolution Network for Recommendation   | lightgcn | https://dl.acm.org/doi/10.1145/3397271.3401063         |
+| Self-supervised graph learning for recommendation                                 | sgl      | https://doi.org/10.1145/3404835.3462862                |
+| UltraGCN: Ultra Simplification of Graph Convolutional Networks for Recommendation | ultragcn | https://dl.acm.org/doi/10.1145/3459637.3482291         |
+| How Powerful is Graph Convolution for Recommendation?                             | gfcf     | https://dl.acm.org/doi/abs/10.1145/3459637.3482264     |
++-----------------------------------------------------------------------------------+----------+--------------------------------------------------------+
 ''')
 
 while True:
-    model = input('Insert model name (ngcf, lightgcn, dgcf, lr-gccf, ultragcn, gfcf): ').lower()
-    if model in ['ngcf', 'lightgcn', 'dgcf', 'lr-gccf', 'ultragcn', 'gfcf']:
+    model = input('Insert model name (ngcf, dgcf, lightgcn, sgl, ultragcn, gfcf): ').lower()
+    if model in ['ngcf', 'lightgcn', 'dgcf', 'sgl', 'ultragcn', 'gfcf']:
         break
     else:
-        print('Sorry, the model should be one of these: ngcf, lightgcn, dgcf, lr-gccf, ultragcn, gfcf')
-
-while True:
-    layer = input('Insert number of explored hops (0 for ultragcn and gfcf, 1, 2, 3, 4 for the others): ')
-    if layer.lower() in ['0', '1', '2', '3', '4']:
-        break
-    else:
-        print('Sorry, the number of explored hops should be one of these: 0, 1, 2, 3, 4')
+        print('Sorry, the model should be one of these: ngcf, dgcf, lightgcn, sgl, ultragcn, gfcf')
 
 print('DATASETS:')
 print(u'''
 +----------------------+--------+--------+--------------+
 |       Dataset        | Users  | Items  | Interactions |
 +----------------------+--------+--------+--------------+
-| Movielens-1M         |  5,915 |  2,753 |      570,622 |
-| Amazon Digital Music |  8,328 |  6,275 |       99,400 |
-| Epinions             | 14,341 | 13,145 |      269,170 |
+| Gowalla              | 29,858 | 40,981 |    1,027,370 |
+| Yelp 2018            | 31,668 | 38,048 |    1,561,406 |
+| Amazon Book          | 52,643 | 91,599 |    2,984,108 |
 +----------------------+--------+--------+--------------+
 ''')
 
 while True:
-    dataset = input('Insert dataset name (movielens-1m, amazon digital music, epinions): ').lower()
-    if dataset in ['movielens-1m', 'amazon digital music', 'epinions']:
-        if dataset == 'movielens-1m':
-            dataset = 'movielens'
-            if not os.path.exists('data/movielens'):
-                os.makedirs('data/movielens')
-                gdown.download_folder("https://drive.google.com/drive/folders/1ZIAFa63TAP76D5qSRaxltN0jBwO3aPbE",
+    dataset = input('Insert dataset name (gowalla, yelp 2018, amazon book): ').lower()
+    if dataset in ['gowalla', 'yelp 2018', 'amazon book']:
+        if dataset == 'gowalla':
+            if not os.path.exists('data/gowalla'):
+                os.makedirs('data/gowalla')
+                gdown.download_folder("https://drive.google.com/drive/folders/1j-9g_XXZ3nmgcatePduy-Y0x4KPApJDm?usp=share_link",
                                       use_cookies=False)
-
-                files_list = os.listdir('movielens')
+                files_list = os.listdir('gowalla')
                 for files in files_list:
-                    shutil.move('movielens/' + files, 'data/movielens/')
-                os.rmdir('movielens')
-        elif dataset == 'epinions':
-            if not os.path.exists('data/epinions'):
-                os.makedirs('data/epinions')
-                gdown.download_folder("https://drive.google.com/drive/folders/1uj7X5PdaHTbES-YcoKnQMEuuiLAjC-_k",
+                    shutil.move('gowalla/' + files, 'data/gowalla/')
+                os.rmdir('gowalla')
+        elif dataset == 'yelp 2018':
+            dataset = 'yelp-2018'
+            if not os.path.exists('data/yelp-2018'):
+                os.makedirs('data/yelp-2018')
+                gdown.download_folder("https://drive.google.com/drive/folders/1pMzJqkhyKM9n8JsyoVFrxYMQzi2PTDoL?usp=share_link",
                                       use_cookies=False)
-                files_list = os.listdir('epinions')
-                os.rmdir('epinions')
+                files_list = os.listdir('yelp-2018')
                 for files in files_list:
-                    shutil.move('epinions/' + files, 'data/epinions/')
+                    shutil.move('yelp-2018/' + files, 'data/yelp-2018/')
         else:
-            dataset = 'amazon_music'
-            if not os.path.exists('data/amazon_music'):
-                os.makedirs('data/amazon_music')
-                gdown.download_folder("https://drive.google.com/drive/folders/1ABWWOE9PONypZw1qV80VrRu2T7QQicRn",
+            dataset = 'amazon-book'
+            if not os.path.exists('data/amazon-book'):
+                os.makedirs('data/amazon-book')
+                gdown.download_folder("https://drive.google.com/drive/folders/1uHyqJ8KD3DD7IA7V7HzlvvFf3RfRRayJ?usp=share_link",
                                       use_cookies=False)
-                files_list = os.listdir('amazon_music')
+                files_list = os.listdir('amazon-book')
                 for files in files_list:
-                    shutil.move('amazon_music/' + files, 'data/amazon_music/')
-                os.rmdir('amazon_music')
+                    shutil.move('amazon-book/' + files, 'data/amazon-book/')
+                os.rmdir('amazon-book')
         break
     else:
-        print('Sorry, the dataset should be one of these: movielens-1m, amazon digital music, epinions')
+        print('Sorry, the dataset should be one of these: gowalla, yelp 2018, amazon book')
 
 print('\n\n')
-run_experiment(f"config_files/{model}_{dataset}_{layer}.yml")
+run_experiment(f"config_files/{model}_{dataset}.yml")
