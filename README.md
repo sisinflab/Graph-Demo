@@ -194,7 +194,7 @@ git clone https://github.com/sisinflab/Graph-Demo.git
 ```
 
 ```
-cd Graph-Demo-WSDM2023/
+cd Graph-Demo/
 ```
 
 ### 1. Train and evaluate NGCF (explicit message-passing)
