@@ -1,7 +1,7 @@
 -f https://download.pytorch.org/whl/gpu/torch_stable.html
 -f https://data.pyg.org/whl/torch-1.11.0+cu102.html
-hyperopt==0.2.5
-numpy==1.18.0
+hyperopt
+numpy
 torch==1.11.0
 torch-scatter
 torch-sparse
@@ -9,11 +9,11 @@ torch-cluster
 torch-spline-conv
 torch-geometric
 tensorflow
-tqdm==4.58.0
-scipy==1.4.1
-pandas==1.1.5
-Pillow>=8.1.1
-PyYAML==5.4.1
-scikit_learn==0.24.1
+tqdm
+scipy
+pandas
+Pillow
+PyYAML
+scikit_learn
 sparsesvd
 gdown
