@@ -5,7 +5,9 @@ services:
     image: sisinflabpoliba/demo-graph
     tty: true
     stdin_open: true
-    command: CUBLAS_WORKSPACE_CONFIG=:16:8 python3.8 start_experiments.py
+    environment:
+      - CUBLAS_WORKSPACE_CONFIG=:16:8
+    command: python3.8 start_experiments.py
     deploy:
       resources:
         reservations:
