@@ -16,4 +16,4 @@ RUN apt-key del 7fa2af80 && \
     pip install -r Graph-Demo/requirements.txt && \
     pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.11.0+cu102.html
 
-WORKDIR Graph-Demo-WSDM2023
+WORKDIR Graph-Demo
