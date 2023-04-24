@@ -15,5 +15,6 @@ pandas
 Pillow
 PyYAML
 scikit_learn
+Cython
 sparsesvd
 gdown
