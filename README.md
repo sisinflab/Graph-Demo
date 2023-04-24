@@ -180,9 +180,9 @@ Docker Compose version v2.6.0
 ## Demo Datasets
 | **Datasets**         | **Users** | **Items** | **Interactions** | **Official Link**                                 | **Download Link**                                                                 |
 |----------------------|-----------|-----------|------------------|---------------------------------------------------|-----------------------------------------------------------------------------------|
-| Gowalla         | 29,858     | 40,981     | 1,027,370          |  https://snap.stanford.edu/data/loc-gowalla.html    | [link](https://drive.google.com/drive/folders/1ZIAFa63TAP76D5qSRaxltN0jBwO3aPbE) |
-| Yelp 2018 | 31,668     | 38,048     | 1,561,406           |     https://www.yelp.com/dataset        | [link](https://drive.google.com/drive/folders/1ABWWOE9PONypZw1qV80VrRu2T7QQicRn) |
-| Amazon Book             | 52,643    | 91,599    | 2,984,108          | https://jmcauley.ucsd.edu/data/amazon/ | [link](https://drive.google.com/drive/folders/1uj7X5PdaHTbES-YcoKnQMEuuiLAjC-_k) |
+| Gowalla         | 29,858     | 40,981     | 1,027,370          |  https://snap.stanford.edu/data/loc-gowalla.html    | [link](https://drive.google.com/file/d/1H635ObV5V1U1m2Xj5Xjgdr_pzmB7hEWM/view?usp=share_link) |
+| Yelp 2018 | 31,668     | 38,048     | 1,561,406           |     https://www.yelp.com/dataset        | [link](https://drive.google.com/file/d/1i191hLKNRxdRAYmJFIy4l9VapLLn83m5/view?usp=share_link) |
+| Amazon Book             | 52,643    | 91,599    | 2,984,108          | https://jmcauley.ucsd.edu/data/amazon/ | [link](https://drive.google.com/file/d/1H75-B1gbfjYNaTCGYX3NX4V85pobT8yh/view?usp=share_link) |
 
 ## Running Examples
 Here, we provide two possible examples to run and test our application.
