@@ -12,6 +12,7 @@ RUN apt-key del 7fa2af80 && \
     curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
     python3.8 get-pip.py && \
     git clone https://github.com/sisinflab/Graph-Demo.git && \
+    apt-get install python3.8-dev && \
     pip install --upgrade pip && \
     pip install -r Graph-Demo/requirements.txt && \
     pip install -r Graph-Demo/requirements_torch_geometric.txt
