@@ -2,7 +2,7 @@
 
 This is the official implementation of the paper _An Out-of-the-Box Application for Reproducible Graph Collaborative Filtering extending the Elliot Framework_, under review as demo paper at UMAP 2023.
 
-**Authors**: Vito Walter Anelli, Tommaso Di Noia, Antonio Ferrara, Daniele Malitesta, Claudio Pomo
+**Authors**: Daniele Malitesta, Claudio Pomo, Vito Walter Anelli, Tommaso Di Noia, Antonio Ferrara
 
 ## Table of Contents
 - [Abstract](#abstract)
