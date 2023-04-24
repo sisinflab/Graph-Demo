@@ -180,9 +180,9 @@ Docker Compose version v2.6.0
 ## Demo Datasets
 | **Datasets**         | **Users** | **Items** | **Interactions** | **Official Link**                                 | **Download Link**                                                                 |
 |----------------------|-----------|-----------|------------------|---------------------------------------------------|-----------------------------------------------------------------------------------|
-| Movielens 1M         | 5,915     | 2,753     | 570,622          | https://grouplens.org/datasets/movielens/1m/      | [link](https://drive.google.com/drive/folders/1ZIAFa63TAP76D5qSRaxltN0jBwO3aPbE) |
-| Amazon Digital Music | 8,328     | 6,275     | 99,400           | https://jmcauley.ucsd.edu/data/amazon/            | [link](https://drive.google.com/drive/folders/1ABWWOE9PONypZw1qV80VrRu2T7QQicRn) |
-| Epinions             | 14,341    | 13,145    | 269,170          | https://snap.stanford.edu/data/soc-Epinions1.html | [link](https://drive.google.com/drive/folders/1uj7X5PdaHTbES-YcoKnQMEuuiLAjC-_k) |
+| Gowalla         | 29,858     | 40,981     | 1,027,370          |  https://snap.stanford.edu/data/loc-gowalla.html    | [link](https://drive.google.com/drive/folders/1ZIAFa63TAP76D5qSRaxltN0jBwO3aPbE) |
+| Yelp 2018 | 31,668     | 38,048     | 1,561,406           |     https://www.yelp.com/dataset        | [link](https://drive.google.com/drive/folders/1ABWWOE9PONypZw1qV80VrRu2T7QQicRn) |
+| Amazon Book             | 52,643    | 91,599    | 2,984,108          | https://jmcauley.ucsd.edu/data/amazon/ | [link](https://drive.google.com/drive/folders/1uj7X5PdaHTbES-YcoKnQMEuuiLAjC-_k) |
 
 ## Running Examples
 Here, we provide two possible examples to run and test our application.
