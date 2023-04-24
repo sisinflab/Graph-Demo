@@ -9,6 +9,6 @@ pandas
 Pillow
 PyYAML
 scikit_learn
-sparsesvd
+sparsesvd==0.2.2
 gdown
 -r requirements_torch_geometric.txt
