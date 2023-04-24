@@ -171,9 +171,9 @@ Docker Compose version v2.6.0
 | **Models** | **Title**                                                                                              | **Authors** | **Year** | **Conference** | **Link DOI**                                           |
 |------------|--------------------------------------------------------------------------------------------------------|-------------|----------|----------------|--------------------------------------------------------|
 | NGCF       | Neural Graph Collaborative Filtering                                                                   | Wang et al. | 2019     | SIGIR          | https://dl.acm.org/doi/10.1145/3331184.3331267         |
-| LightGCN   | LightGCN: Simplifying and Powering Graph Convolution Network for Recommendation                        | He et al.   | 2020     | SIGIR          | https://dl.acm.org/doi/10.1145/3397271.3401063         |
 | DGCF       | Disentangled Graph Collaborative Filtering                                                             | Wang et al. | 2020     | SIGIR          | https://dl.acm.org/doi/abs/10.1145/3397271.3401137     |
-| LR-GCCF    | Revisiting Graph Based Collaborative Filtering: A Linear Residual Graph Convolutional Network Approach | Chen et al. | 2020     | AAAI           | https://ojs.aaai.org//index.php/AAAI/article/view/5330 |
+| LightGCN   | LightGCN: Simplifying and Powering Graph Convolution Network for Recommendation                        | He et al.   | 2020     | SIGIR          | https://dl.acm.org/doi/10.1145/3397271.3401063         |
+| SGL    | Self-supervised graph learning for recommendation | Wu et al. | 2020     | AAAI           | https://doi.org/10.1145/3404835.3462862 |
 | UltraGCN   | UltraGCN: Ultra Simplification of Graph Convolutional Networks for Recommendation                      | Mao et al.  | 2021     | CIKM           | https://dl.acm.org/doi/10.1145/3459637.3482291         |
 | GFCF       | How Powerful is Graph Convolution for Recommendation?                                                  | Shen et al. | 2021     | CIKM           | https://dl.acm.org/doi/abs/10.1145/3459637.3482264     |
 
