@@ -190,7 +190,7 @@ Here, we provide two possible examples to run and test our application.
 First, let us clone this GitHub repository so that we can access to the YAML docker compose file.
 
 ```
-git clone https://github.com/sisinflab/Graph-Demo-WSDM2023.git
+git clone https://github.com/sisinflab/Graph-Demo.git
 ```
 
 ```
