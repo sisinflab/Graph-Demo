@@ -1,7 +1,7 @@
 hyperopt
 numpy
 torch --index-url https://download.pytorch.org/whl/cu118
-pyg_lib -f https://data.pyg.org/whl/torch-2.0.0+cu118.html
+torch_geometric -f https://data.pyg.org/whl/torch-2.0.0+cu118.html
 torch-scatter -f https://data.pyg.org/whl/torch-2.0.0+cu118.html
 torch_scatter -f https://data.pyg.org/whl/torch-2.0.0+cu118.html
 torch_sparse -f https://data.pyg.org/whl/torch-2.0.0+cu118.html
