@@ -10,14 +10,32 @@ __email__ = 'vitowalter.anelli@poliba.it, claudio.pomo@poliba.it, daniele.malite
 from tqdm import tqdm
 import numpy as np
 import torch
+import random
 import os
 
 from elliot.utils.write import store_recommendation
-from elliot.dataset.samplers import custom_sampler_batch as csb
+from .custom_sampler import Sampler
 from elliot.recommender import BaseRecommenderModel
 from elliot.recommender.base_recommender_model import init_charger
 from elliot.recommender.recommender_utils_mixin import RecMixin
 from .NGCFModel import NGCFModel
+
+import math
+
+from torch_sparse import SparseTensor
+
+from torch_sparse import mul, fill_diag, sum
+
+
+def apply_norm(edge_index, add_self_loops=True):
+    adj_t = edge_index
+    if add_self_loops:
+        adj_t = fill_diag(adj_t, 1.)
+    deg = sum(adj_t, dim=1)
+    deg_inv = deg.pow_(-1)
+    deg_inv.masked_fill_(deg_inv == float('inf'), 0.)
+    norm_adj_t = mul(adj_t, deg_inv.view(-1, 1))
+    return norm_adj_t
 
 
 class NGCF(RecMixin, BaseRecommenderModel):
@@ -53,6 +71,7 @@ class NGCF(RecMixin, BaseRecommenderModel):
           node_dropout: ()
           message_dropout: (0.1,)
     """
+
     @init_charger
     def __init__(self, data, config, params, *args, **kwargs):
         ######################################
@@ -64,17 +83,35 @@ class NGCF(RecMixin, BaseRecommenderModel):
             ("_n_layers", "n_layers", "n_layers", 3, int, None),
             ("_weight_size", "weight_size", "weight_size", 64, int, None),
             ("_node_dropout", "node_dropout", "node_dropout", 0.0, float, None),
-            ("_message_dropout", "message_dropout", "message_dropout", 0.5, float, None)
+            ("_message_dropout", "message_dropout", "message_dropout", 0.5, float, None),
+            ("_normalize", "normalize", "normalize", True, bool, None)
         ]
         self.autoset_params()
 
-        self._sampler = csb.Sampler(self._data.i_train_dict, self._seed)
+        random.seed(self._seed)
+        np.random.seed(self._seed)
+        torch.manual_seed(self._seed)
+
+        self._sampler = Sampler(self._data.i_train_dict, self._batch_size, self._seed)
         if self._batch_size < 1:
             self._batch_size = self._num_users
 
         row, col = data.sp_i_train.nonzero()
         col = [c + self._num_users for c in col]
         self.edge_index = np.array([row, col])
+
+        self.adj = SparseTensor(row=torch.cat([torch.tensor(self.edge_index[0], dtype=torch.int64),
+                                               torch.tensor(self.edge_index[1], dtype=torch.int64)], dim=0),
+                                col=torch.cat([torch.tensor(self.edge_index[1], dtype=torch.int64),
+                                               torch.tensor(self.edge_index[0], dtype=torch.int64)], dim=0),
+                                sparse_sizes=(self._num_users + self._num_items,
+                                              self._num_users + self._num_items))
+
+        if self._normalize:
+            self.adj = apply_norm(self.adj, add_self_loops=True)
+
+        self.users = list(range(self._num_users))
+        self.items = list(range(self._num_items))
 
         self._model = NGCFModel(
             num_users=self._num_users,
@@ -84,9 +121,7 @@ class NGCF(RecMixin, BaseRecommenderModel):
             l_w=self._l_w,
             weight_size=self._weight_size,
             n_layers=self._n_layers,
-            node_dropout=self._node_dropout,
             message_dropout=self._message_dropout,
-            edge_index=self.edge_index,
             random_seed=self._seed
         )
 
@@ -96,6 +131,23 @@ class NGCF(RecMixin, BaseRecommenderModel):
                + f"_{self.get_base_params_shortcut()}" \
                + f"_{self.get_params_shortcut()}"
 
+    def sparse_dropout(self, x, rate, noise_shape):
+        random_tensor = 1 - rate
+        random_tensor += torch.rand(noise_shape).to(x.device())
+        dropout_mask = torch.floor(random_tensor).type(torch.bool)
+        i = self.adj.to_torch_sparse_coo_tensor().coalesce().indices()
+        v = self.adj.to_torch_sparse_coo_tensor().coalesce().values()
+
+        i = i[:, dropout_mask]
+        v = v[dropout_mask]
+
+        out = SparseTensor(row=i[0],
+                           col=i[1],
+                           value=v * (1. / (1 - rate)),
+                           sparse_sizes=(self._num_users + self._num_items,
+                                         self._num_users + self._num_items))
+        return out
+
     def train(self):
         if self._restore:
             return self.restore_weights()
@@ -104,23 +156,42 @@ class NGCF(RecMixin, BaseRecommenderModel):
             loss = 0
             steps = 0
             self._model.train()
-            with tqdm(total=int(self._data.transactions // self._batch_size), disable=not self._verbose) as t:
-                for batch in self._sampler.step(self._data.transactions, self._batch_size):
+            if self._node_dropout > 0:
+                sampled_adj = self.sparse_dropout(self.adj,
+                                                  self._node_dropout,
+                                                  self.adj.nnz())
+            n_batch = int(self._data.transactions / self._batch_size) if self._data.transactions % self._batch_size == 0 else int(self._data.transactions / self._batch_size) + 1
+            with tqdm(total=n_batch, disable=not self._verbose) as t:
+                for _ in range(n_batch):
+                    user, pos, neg = self._sampler.step()
                     steps += 1
-                    loss += self._model.train_step(batch)
+                    if self._node_dropout > 0:
+                        loss += self._model.train_step((user, pos, neg), sampled_adj)
+                    else:
+                        loss += self._model.train_step((user, pos, neg), self.adj)
+
+                    if math.isnan(loss) or math.isinf(loss) or (not loss):
+                        break
+
                     t.set_postfix({'loss': f'{loss / steps:.5f}'})
                     t.update()
 
             self.evaluate(it, loss / (it + 1))
+        if it + 1 == self._epochs and self._write_best_iterations:  # never met an early stopping condition
+            with open(self._config.path_output_rec_performance + '/best_iterations.tsv', 'a') as f:
+                f.write(self.name + '\t' + str(self._params.best_iteration) + '\n')
+            self.logger.info(f"Best iteration: {self._params.best_iteration}")
+            self.logger.info(f"Current configuration: {self.name}")
 
     def get_recommendations(self, k: int = 100):
         predictions_top_k_test = {}
         predictions_top_k_val = {}
         self._model.eval()
         with torch.no_grad():
+            gu, gi = self._model.propagate_embeddings(self.adj)
             for index, offset in enumerate(range(0, self._num_users, self._batch_size)):
                 offset_stop = min(offset + self._batch_size, self._num_users)
-                predictions = self._model.predict(offset, offset_stop)
+                predictions = self._model.predict(gu[offset: offset_stop], gi)
                 recs_val, recs_test = self.process_protocol(k, predictions, offset, offset_stop)
                 predictions_top_k_val.update(recs_val)
                 predictions_top_k_test.update(recs_test)
@@ -142,7 +213,7 @@ class NGCF(RecMixin, BaseRecommenderModel):
             self._results.append(result_dict)
 
             if it is not None:
-                self.logger.info(f'Epoch {(it + 1)}/{self._epochs} loss {loss/(it + 1):.5f}')
+                self.logger.info(f'Epoch {(it + 1)}/{self._epochs} loss {loss / (it + 1):.5f}')
             else:
                 self.logger.info(f'Finished')
 

@@ -13,11 +13,13 @@ import torch
 import os
 
 from elliot.utils.write import store_recommendation
-from elliot.dataset.samplers import custom_sampler as cs
+from .custom_sampler import Sampler
 from elliot.recommender import BaseRecommenderModel
 from elliot.recommender.base_recommender_model import init_charger
 from elliot.recommender.recommender_utils_mixin import RecMixin
 from .DGCFModel import DGCFModel
+
+import math
 
 
 class DGCF(RecMixin, BaseRecommenderModel):
@@ -59,12 +61,6 @@ class DGCF(RecMixin, BaseRecommenderModel):
     """
     @init_charger
     def __init__(self, data, config, params, *args, **kwargs):
-
-        self._sampler = cs.Sampler(self._data.i_train_dict)
-
-        if self._batch_size < 1:
-            self._batch_size = self._num_users
-
         ######################################
 
         self._params_list = [
@@ -72,12 +68,15 @@ class DGCF(RecMixin, BaseRecommenderModel):
             ("_factors", "factors", "factors", 64, int, None),
             ("_l_w_bpr", "l_w_bpr", "l_w_bpr", 0.01, float, None),
             ("_l_w_ind", "l_w_ind", "l_w_ind", 0.01, float, None),
-            ("_ind_batch_size", "ind_batch_size", "ind_batch_size", 512, int, None),
             ("_n_layers", "n_layers", "n_layers", 3, int, None),
             ("_intents", "intents", "intents", 16, int, None),
             ("_routing_iterations", "routing_iterations", "routing_iterations", 2, int, None)
         ]
         self.autoset_params()
+
+        self._sampler = Sampler(self._data.i_train_dict, self._batch_size, self._seed)
+        if self._batch_size < 1:
+            self._batch_size = self._num_users
 
         row, col = data.sp_i_train.nonzero()
         col = [c + self._num_users for c in col]
@@ -90,7 +89,6 @@ class DGCF(RecMixin, BaseRecommenderModel):
             embed_k=self._factors,
             l_w_bpr=self._l_w_bpr,
             l_w_ind=self._l_w_ind,
-            ind_batch_size=self._ind_batch_size,
             n_layers=self._n_layers,
             intents=self._intents,
             routing_iterations=self._routing_iterations,
@@ -111,24 +109,36 @@ class DGCF(RecMixin, BaseRecommenderModel):
         for it in self.iterate(self._epochs):
             loss = 0
             steps = 0
-            with tqdm(total=int(self._data.transactions // self._batch_size), disable=not self._verbose) as t:
-                for batch in self._sampler.step(self._data.transactions, self._batch_size):
+            n_batch = int(self._data.transactions / self._batch_size) if self._data.transactions % self._batch_size == 0 else int(self._data.transactions / self._batch_size) + 1
+            cor_batch_size = int(max(self._num_users / n_batch, self._num_items / n_batch))
+            with tqdm(total=n_batch, disable=not self._verbose) as t:
+                for _ in range(n_batch):
+                    user, pos, neg = self._sampler.step()
                     steps += 1
-                    loss += self._model.train_step(batch)
+                    cor_users, cor_items = self._sampler.sample_cor_samples(cor_batch_size)
+                    loss += self._model.train_step((user, pos, neg), cor_users, cor_items)
+
+                    if math.isnan(loss) or math.isinf(loss) or (not loss):
+                        break
+
                     t.set_postfix({'loss': f'{loss / steps:.5f}'})
                     t.update()
 
             self.evaluate(it, loss / (it + 1))
 
+        if it + 1 == self._epochs and self._write_best_iterations:  # never met an early stopping condition
+            with open(self._config.path_output_rec_performance + '/best_iterations.tsv', 'a') as f:
+                f.write(self.name + '\t' + str(self._params.best_iteration) + '\n')
+            self.logger.info(f"Best iteration: {self._params.best_iteration}")
+            self.logger.info(f"Current configuration: {self.name}")
+
     def get_recommendations(self, k: int = 100):
         predictions_top_k_test = {}
         predictions_top_k_val = {}
-        gu, gi = self._model.propagate_embeddings(evaluate=True)
-        gu, gi = torch.reshape(gu, (gu.shape[0], gu.shape[1] * gu.shape[2])), torch.reshape(gi, (
-            gi.shape[0], gi.shape[1] * gi.shape[2]))
+        ua_embeddings, ia_embeddings = self._model.propagate_embeddings()
         for index, offset in enumerate(range(0, self._num_users, self._batch_size)):
             offset_stop = min(offset + self._batch_size, self._num_users)
-            predictions = self._model.predict(gu[offset: offset_stop], gi)
+            predictions = self._model.predict(ua_embeddings[offset: offset_stop], ia_embeddings)
             recs_val, recs_test = self.process_protocol(k, predictions, offset, offset_stop)
             predictions_top_k_val.update(recs_val)
             predictions_top_k_test.update(recs_test)

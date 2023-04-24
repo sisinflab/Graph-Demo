@@ -1,6 +1,8 @@
 """
 Module description:
 
+This module is inspired by: https://github.com/RUCAIBox/RecBole/blob/master/recbole/model/general_recommender/dgcf.py
+
 """
 
 __version__ = '0.3.0'
@@ -25,7 +27,6 @@ class DGCFModel(torch.nn.Module, ABC):
                  embed_k,
                  l_w_bpr,
                  l_w_ind,
-                 ind_batch_size,
                  n_layers,
                  intents,
                  routing_iterations,
@@ -43,6 +44,7 @@ class DGCFModel(torch.nn.Module, ABC):
         torch.cuda.manual_seed(random_seed)
         torch.cuda.manual_seed_all(random_seed)
         torch.backends.cudnn.deterministic = True
+        torch.use_deterministic_algorithms(True)
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -52,23 +54,42 @@ class DGCFModel(torch.nn.Module, ABC):
         self.learning_rate = learning_rate
         self.l_w_bpr = l_w_bpr
         self.l_w_ind = l_w_ind
-        self.ind_batch_size = ind_batch_size
         self.n_layers = n_layers
         self.intents = intents
         self.routing_iterations = routing_iterations
         self.edge_index = torch.tensor(edge_index, dtype=torch.int64)
-        self.edge_index_intents = torch.ones((self.intents, self.edge_index.shape[1]), dtype=torch.float32)
 
-        self.Gu = torch.nn.Parameter(
-            torch.nn.init.xavier_normal_(torch.empty((self.num_users, self.embed_k))))
-        self.Gu.to(self.device)
-        self.Gi = torch.nn.Parameter(
-            torch.nn.init.xavier_normal_(torch.empty((self.num_items, self.embed_k))))
-        self.Gi.to(self.device)
+        all_h_list, all_t_list = self.edge_index
+        self.all_h_list = torch.LongTensor(all_h_list).to(self.device)
+        self.all_t_list = torch.LongTensor(all_t_list).to(self.device)
+
+        self.row, self.col = edge_index[:, :edge_index.shape[1] // 2]
+
+        self.edge2head = torch.LongTensor(np.array([edge_index[0], list(range(edge_index.shape[1]))])).to(self.device)
+        self.head2edge = torch.LongTensor(np.array([list(range(edge_index.shape[1])), edge_index[0]])).to(self.device)
+        self.tail2edge = torch.LongTensor(np.array([list(range(edge_index.shape[1])), edge_index[1]])).to(self.device)
+
+        val_one = torch.ones_like(torch.from_numpy(edge_index[0])).float().to(self.device)
+        num_node = self.num_users + self.num_items
+        self.edge2head_mat = self._build_sparse_tensor(
+            self.edge2head, val_one, (num_node, len(edge_index[0]))
+        )
+        self.head2edge_mat = self._build_sparse_tensor(
+            self.head2edge, val_one, (len(edge_index[0]), num_node)
+        )
+        self.tail2edge_mat = self._build_sparse_tensor(
+            self.tail2edge, val_one, (len(edge_index[0]), num_node)
+        )
+
+        self.col -= self.num_users
+
+        initializer = torch.nn.init.xavier_uniform_
+        self.Gu = torch.nn.Parameter(initializer(torch.empty(self.num_users, self.embed_k)))
+        self.Gi = torch.nn.Parameter(initializer(torch.empty(self.num_items, self.embed_k)))
 
         dgcf_network_list = []
         for layer in range(self.n_layers):
-            dgcf_network_list.append((DGCFLayer(), 'x, edge_index -> x'))
+            dgcf_network_list.append((DGCFLayer(intents=self.intents), 'x, edge_index -> x'))
 
         self.dgcf_network = torch_geometric.nn.Sequential('x, edge_index', dgcf_network_list)
         self.dgcf_network.to(self.device)
@@ -76,62 +97,183 @@ class DGCFModel(torch.nn.Module, ABC):
 
         self.optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
 
-    def propagate_embeddings(self, evaluate=False):
-        ego_embeddings = torch.reshape(torch.cat((self.Gu.to(self.device), self.Gi.to(self.device)), 0),
-                                       (self.num_users + self.num_items, self.intents, self.embed_k // self.intents))
+    def _build_sparse_tensor(self, indices, values, size):
+        # Construct the sparse matrix with indices, values and size.
+        return torch.sparse.FloatTensor(indices, values, size).to(self.device)
+
+    def build_matrix(self, A_values):
+        r"""Get the normalized interaction matrix of users and items according to A_values.
+        Construct the square matrix from the training data and normalize it
+        using the laplace matrix.
+        Args:
+            A_values (torch.cuda.FloatTensor): (num_edge, n_factors)
+        .. math::
+            A_{hat} = D^{-0.5} \times A \times D^{-0.5}
+        Returns:
+            torch.cuda.FloatTensor: Sparse tensor of the normalized interaction matrix. shape: (num_edge, n_factors)
+        """
+        norm_A_values = torch.nn.Softmax(dim=1)(A_values)
+        factor_edge_weight = []
+        for i in range(self.intents):
+            tp_values = norm_A_values[:, i].unsqueeze(1)
+            # (num_edge, 1)
+            d_values = torch.sparse.mm(self.edge2head_mat, tp_values)
+            # (num_node, num_edge) (num_edge, 1) -> (num_node, 1)
+            d_values = torch.clamp(d_values, min=1e-8)
+            d_values = 1.0 / torch.sqrt(d_values)
+            head_term = torch.sparse.mm(self.head2edge_mat, d_values)
+            # (num_edge, num_node) (num_node, 1) -> (num_edge, 1)
+
+            tail_term = torch.sparse.mm(self.tail2edge_mat, d_values)
+            edge_weight = tp_values * head_term * tail_term
+            factor_edge_weight.append(edge_weight)
+        return factor_edge_weight
+
+    def propagate_embeddings(self):
+        ego_embeddings = torch.cat((self.Gu.to(self.device), self.Gi.to(self.device)), 0)
+        all_embeddings = [ego_embeddings.unsqueeze(1)]
+        # initialize with every factor value as 1
+        A_values = torch.ones((self.edge_index.shape[1], self.intents)).to(self.device)
+        A_values = torch.autograd.Variable(A_values, requires_grad=True)
+        for k in range(self.n_layers):
+            layer_embeddings = []
+
+            # split the input embedding table
+            # .... ego_layer_embeddings is a (n_factors)-length list of embeddings
+            # [n_users+n_items, embed_size/n_factors]
+            ego_layer_embeddings = torch.chunk(ego_embeddings, self.intents, 1)
+            for t in range(0, self.routing_iterations):
+                iter_embeddings = []
+                A_iter_values = []
+                factor_edge_weight = self.build_matrix(A_values=A_values)
+                for i in range(0, self.intents):
+                    # update the embeddings via simplified graph convolution layer
+                    edge_weight = factor_edge_weight[i]
+                    # (num_edge, 1)
+                    edge_val = torch.sparse.mm(
+                        self.tail2edge_mat, ego_layer_embeddings[i]
+                    )
+                    # (num_edge, dim / n_factors)
+                    edge_val = edge_val * edge_weight
+                    # (num_edge, dim / n_factors)
+                    factor_embeddings = torch.sparse.mm(self.edge2head_mat, edge_val)
+                    # (num_node, num_edge) (num_edge, dim) -> (num_node, dim)
+
+                    iter_embeddings.append(factor_embeddings)
+
+                    if t == self.routing_iterations - 1:
+                        layer_embeddings = iter_embeddings
+
+                    # get the factor-wise embeddings
+                    # .... head_factor_embeddings is a dense tensor with the size of [all_h_list, embed_size/n_factors]
+                    # .... analogous to tail_factor_embeddings
+                    head_factor_embeddings = torch.index_select(
+                        factor_embeddings, dim=0, index=self.all_h_list
+                    )
+                    tail_factor_embeddings = torch.index_select(
+                        ego_layer_embeddings[i], dim=0, index=self.all_t_list
+                    )
+
+                    # .... constrain the vector length
+                    # .... make the following attentive weights within the range of (0,1)
+                    # to adapt to torch version
+                    head_factor_embeddings = torch.nn.functional.normalize(
+                        head_factor_embeddings, p=2, dim=1
+                    )
+                    tail_factor_embeddings = torch.nn.functional.normalize(
+                        tail_factor_embeddings, p=2, dim=1
+                    )
+
+                    # get the attentive weights
+                    # .... A_factor_values is a dense tensor with the size of [num_edge, 1]
+                    A_factor_values = torch.sum(
+                        head_factor_embeddings * torch.tanh(tail_factor_embeddings),
+                        dim=1,
+                        keepdim=True,
+                    )
+
+                    # update the attentive weights
+                    A_iter_values.append(A_factor_values)
+                A_iter_values = torch.cat(A_iter_values, dim=1)
+                # (num_edge, n_factors)
+                # add all layer-wise attentive weights up.
+                A_values = A_values + A_iter_values
+
+            # sum messages of neighbors, [n_users+n_items, embed_size]
+            side_embeddings = torch.cat(layer_embeddings, dim=1)
+
+            ego_embeddings = side_embeddings
+            # concatenate outputs of all layers
+            all_embeddings += [ego_embeddings.unsqueeze(1)]
+
+        all_embeddings = torch.cat(all_embeddings, dim=1)
+        # (num_node, n_layer + 1, embedding_size)
+        all_embeddings = torch.mean(all_embeddings, dim=1, keepdim=False)
+        # (num_node, embedding_size)
+
+        u_g_embeddings = all_embeddings[: self.num_users, :]
+        i_g_embeddings = all_embeddings[self.num_users:, :]
+
+        return u_g_embeddings, i_g_embeddings
+
+    def propagate_embeddings_old(self, evaluate=False):
+        ego_embeddings = torch.split(torch.cat((self.Gu.to(self.device), self.Gi.to(self.device)), 0),
+                                     self.embed_k // self.intents, 1)
+        ego_embeddings = torch.stack(ego_embeddings, dim=1)
         all_embeddings = [ego_embeddings]
-        current_edge_index = self.edge_index.clone()
-        row, col = current_edge_index[:, :current_edge_index.shape[1] // 2]
-        col -= self.num_users
+        edge_index_intents = torch.ones((self.intents, self.edge_index.shape[1]), dtype=torch.float32)
 
         for layer in range(self.n_layers):
-            current_edge_index_intents = self.edge_index_intents.to(self.device)
+            current_edge_index_intents = edge_index_intents.to(self.device)
             current_embeddings = all_embeddings[layer]
             current_0_gu, current_0_gi = torch.split(current_embeddings, [self.num_users, self.num_items], 0)
             for _ in range(self.routing_iterations):
                 if not evaluate:
                     current_embeddings = list(
                         self.dgcf_network.children()
-                    )[layer](all_embeddings[layer].to(self.device),
+                    )[layer](current_embeddings.to(self.device),
                              self.edge_index.to(self.device),
                              current_edge_index_intents.to(self.device))
                     current_t_gu, current_t_gi = torch.split(current_embeddings, [self.num_users, self.num_items], 0)
-                    with torch.no_grad():  # the update is done manually, the tensor is not learned during the training
-                        users_items = torch.sum(
-                            current_t_gu[row].to(self.device) * torch.tanh(current_0_gi[col].to(self.device)).to(
-                                self.device), dim=-1)
-                        items_users = torch.sum(
-                            current_t_gi[col].to(self.device) * torch.tanh(current_0_gu[row].to(self.device)).to(
-                                self.device), dim=-1)
-                        all_interactions = torch.cat([users_items, items_users], dim=0)
-                        current_edge_index_intents = torch.softmax(current_edge_index_intents.clone(),
-                                                                   dim=0) + all_interactions.permute(1, 0)
+                    users_items = torch.sum(
+                        torch.nn.functional.normalize(current_t_gu[self.row], p=2, dim=-1).to(self.device) *
+                        torch.tanh(torch.nn.functional.normalize(current_0_gi[self.col], p=2, dim=-1).to(self.device)).to(
+                            self.device), dim=-1)
+                    items_users = torch.sum(
+                        torch.nn.functional.normalize(current_t_gi[self.col], p=2, dim=-1).to(self.device) *
+                        torch.tanh(torch.nn.functional.normalize(current_0_gu[self.row], p=2, dim=-1).to(self.device)).to(
+                            self.device), dim=-1)
+                    current_edge_index_intents = torch.cat([users_items, items_users], dim=0).t() + current_edge_index_intents
                 else:
                     self.dgcf_network.eval()
                     with torch.no_grad():
                         current_embeddings = list(
                             self.dgcf_network.children()
-                        )[layer](all_embeddings[layer].to(self.device),
+                        )[layer](current_embeddings.to(self.device),
                                  self.edge_index.to(self.device),
                                  current_edge_index_intents.to(self.device))
                         current_t_gu, current_t_gi = torch.split(current_embeddings, [self.num_users, self.num_items],
                                                                  0)
                         users_items = torch.sum(
-                            current_t_gu[row].to(self.device) * torch.tanh(current_0_gi[col].to(self.device)).to(
+                            torch.nn.functional.normalize(current_t_gu[self.row], p=2, dim=-1).to(self.device) *
+                            torch.tanh(
+                                torch.nn.functional.normalize(current_0_gi[self.col], p=2, dim=-1).to(self.device)).to(
                                 self.device), dim=-1)
                         items_users = torch.sum(
-                            current_t_gi[col].to(self.device) * torch.tanh(current_0_gu[row].to(self.device)).to(
+                            torch.nn.functional.normalize(current_t_gi[self.col], p=2, dim=-1).to(self.device) *
+                            torch.tanh(
+                                torch.nn.functional.normalize(current_0_gu[self.row], p=2, dim=-1).to(self.device)).to(
                                 self.device), dim=-1)
-                        all_interactions = torch.cat([users_items, items_users], dim=0)
-                        current_edge_index_intents = torch.softmax(current_edge_index_intents.clone(),
-                                                                   dim=0) + all_interactions.permute(1, 0)
-            self.edge_index_intents = current_edge_index_intents
+                        current_edge_index_intents = torch.cat([users_items, items_users],
+                                                               dim=0).t() + current_edge_index_intents
             all_embeddings += [current_embeddings]
 
         if evaluate:
             self.dgcf_network.train()
 
-        all_embeddings = sum(all_embeddings)
+        all_embeddings = [torch.reshape(emb, (-1, self.embed_k)) for emb in all_embeddings]
+        all_embeddings = torch.stack(all_embeddings, 1)
+        all_embeddings = torch.mean(all_embeddings, dim=1)
         gu, gi = torch.split(all_embeddings, [self.num_users, self.num_items], 0)
         return gu, gi
 
@@ -146,20 +288,6 @@ class DGCFModel(torch.nn.Module, ABC):
 
     def predict(self, gu, gi, **kwargs):
         return torch.matmul(gu.to(self.device), torch.transpose(gi.to(self.device), 0, 1))
-
-    def sample_users_items_for_loss_ind(self):
-        # we sample ind_batch_size users and items because of memory issues as underlined in:
-        # https://github.com/xiangwang1223/disentangled_graph_collaborative_filtering/blob/56dbc30ad82519d2d0655ca01eec935674923b7b/DGCF_v1/DGCF.py#311
-
-        # sample users
-        perm = torch.randperm(self.Gu.shape[0])
-        sampled_users = perm[:self.ind_batch_size]
-
-        # sample items
-        perm = torch.randperm(self.Gi.shape[0])
-        sampled_items = perm[:self.ind_batch_size]
-
-        return sampled_users, sampled_items
 
     @staticmethod
     def get_loss_ind(x1, x2):
@@ -194,39 +322,45 @@ class DGCFModel(torch.nn.Module, ABC):
         loss_ind = dcov_12 / (torch.sqrt(value) + 1e-10)
         return loss_ind
 
-    def train_step(self, batch):
-        gu, gi = self.propagate_embeddings()
+    def train_step(self, batch, cor_users, cor_items):
+        users, pos, neg = batch
+
+        ua_embeddings, ia_embeddings = self.propagate_embeddings()
+
+        u_g_embeddings = ua_embeddings[users]
+        pos_i_g_embeddings = ia_embeddings[pos]
+
+        neg_i_g_embeddings = ia_embeddings[neg]
+        u_g_embeddings_pre = self.Gu[users]
+        pos_i_g_embeddings_pre = self.Gi[pos]
+        neg_i_g_embeddings_pre = self.Gi[neg]
+
+        cor_u_g_embeddings = ua_embeddings[torch.tensor(cor_users, device=self.device)]
+        cor_i_g_embeddings = ia_embeddings[torch.tensor(cor_items, device=self.device)]
+
+        xui_pos = self.forward(inputs=(u_g_embeddings, pos_i_g_embeddings))
+        xui_neg = self.forward(inputs=(u_g_embeddings, neg_i_g_embeddings))
+
+        bpr_loss = torch.mean(self.softplus(-(xui_pos - xui_neg)))
+
+        reg_loss = self.l_w_bpr * (1 / 2) * (torch.norm(u_g_embeddings_pre) ** 2
+                                             + torch.norm(pos_i_g_embeddings_pre) ** 2
+                                             + torch.norm(neg_i_g_embeddings_pre) ** 2) / len(users)
 
         # independence loss
         loss_ind = torch.tensor(0.0, device=self.device)
         if self.intents > 1 and self.l_w_ind > 1e-9:
-            sampled_users, sampled_items = self.sample_users_items_for_loss_ind()
-            sampled_users.to(self.device)
-            sampled_items.to(self.device)
-            gu_sampled = gu[sampled_users]
-            gi_sampled = gi[sampled_items]
-            sampled_embeddings = torch.cat((gu_sampled.to(self.device), gi_sampled.to(self.device)), dim=0)
+            sampled_embeddings = torch.cat((cor_u_g_embeddings.to(self.device), cor_i_g_embeddings.to(self.device)),
+                                           dim=0)
             for intent in range(self.intents - 1):
-                loss_ind += self.get_loss_ind(sampled_embeddings[:, intent].to(self.device),
-                                              sampled_embeddings[:, intent + 1].to(self.device))
+                ui_factor_embeddings = torch.chunk(sampled_embeddings, self.intents, 1)
+                loss_ind += self.get_loss_ind(ui_factor_embeddings[intent].to(self.device),
+                                              ui_factor_embeddings[intent + 1].to(self.device))
             loss_ind /= ((self.intents + 1.0) * self.intents / 2)
             loss_ind *= self.l_w_ind
 
-        # bpr loss
-        gu, gi = torch.reshape(gu, (gu.shape[0], gu.shape[1] * gu.shape[2])), torch.reshape(gi, (
-            gi.shape[0], gi.shape[1] * gi.shape[2]))
-        user, pos, neg = batch
-        xu_pos = self.forward(inputs=(gu[user], gi[pos]))
-        xu_neg = self.forward(inputs=(gu[user], gi[neg]))
-
-        difference = torch.clamp(xu_pos - xu_neg, -80.0, 1e8)
-        loss_bpr = torch.sum(self.softplus(-difference))
-        reg_loss = self.l_w_bpr * (torch.norm(self.Gu, 2) +
-                                   torch.norm(self.Gi, 2))
-        loss_bpr += reg_loss
-
         # sum and optimize according to the overall loss
-        loss = loss_bpr + loss_ind
+        loss = bpr_loss + reg_loss + loss_ind
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()

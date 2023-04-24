@@ -4,22 +4,24 @@ import torch
 import os
 
 from elliot.utils.write import store_recommendation
-from .custom_sampler import Sampler
+from elliot.dataset.samplers import custom_sampler as cs
 from elliot.recommender import BaseRecommenderModel
 from elliot.recommender.base_recommender_model import init_charger
 from elliot.recommender.recommender_utils_mixin import RecMixin
-from .LightGCNModel import LightGCNModel
+from .SGLModel import SGLModel
 
 from torch_sparse import SparseTensor
 
 import math
 
+import random
 
-class LightGCN(RecMixin, BaseRecommenderModel):
+
+class SGL(RecMixin, BaseRecommenderModel):
     r"""
-    LightGCN: Simplifying and Powering Graph Convolution Network for Recommendation
+    Self-supervised Graph Learning for Recommendation
 
-    For further details, please refer to the `paper <https://dl.acm.org/doi/10.1145/3397271.3401063>`_
+    For further details, please refer to the `paper <https://dl.acm.org/doi/10.1145/3404835.3462862>`_
 
     Args:
         lr: Learning rate
@@ -28,13 +30,17 @@ class LightGCN(RecMixin, BaseRecommenderModel):
         batch_size: Batch size
         l_w: Regularization coefficient
         n_layers: Number of stacked propagation layers
+        ssl_temp: Temperature
+        ssl_reg: Regularization term for ssl
+        ssl_ratio: Dropout ratio for ssl
+        sampling: Sampling strategy
 
     To include the recommendation model, add it to the config file adopting the following pattern:
 
     .. code:: yaml
 
       models:
-        LightGCN:
+        SGL:
           meta:
             save_recs: True
           lr: 0.0005
@@ -44,9 +50,18 @@ class LightGCN(RecMixin, BaseRecommenderModel):
           batch_size: 256
           l_w: 0.1
           n_layers: 2
+          ssl_temp: 0.2
+          ssl_reg: 0.1
+          ssl_ratio: 0.1
+          sampling: nd
     """
+
     @init_charger
     def __init__(self, data, config, params, *args, **kwargs):
+        self._sampler = cs.Sampler(self._data.i_train_dict)
+        if self._batch_size < 1:
+            self._batch_size = self._num_users
+
         ######################################
 
         self._params_list = [
@@ -54,38 +69,47 @@ class LightGCN(RecMixin, BaseRecommenderModel):
             ("_factors", "factors", "factors", 64, int, None),
             ("_l_w", "l_w", "l_w", 0.01, float, None),
             ("_n_layers", "n_layers", "n_layers", 1, int, None),
-            ("_normalize", "normalize", "normalize", True, bool, None)
+            ("_ssl_temp", "ssl_temp", "ssl_temp", 0.2, float, None),
+            ("_ssl_reg", "ssl_reg", "ssl_reg", 0.1, float, None),
+            ("_ssl_ratio", "ssl_ratio", "ssl_ratio", 0.1, float, None),
+            ("_sampling", "sampling", "sampling", 'nd', str, None)
         ]
         self.autoset_params()
 
-        self._sampler = Sampler(self._data.i_train_dict, seed=self._seed)
-        if self._batch_size < 1:
-            self._batch_size = self._num_users
+        random.seed(self._seed)
+        np.random.seed(self._seed)
 
         row, col = data.sp_i_train.nonzero()
         col = [c + self._num_users for c in col]
-        edge_index = np.array([row, col])
-        edge_index = torch.tensor(edge_index, dtype=torch.int64)
-        self.adj = SparseTensor(row=torch.cat([edge_index[0], edge_index[1]], dim=0),
-                                col=torch.cat([edge_index[1], edge_index[0]], dim=0),
-                                sparse_sizes=(self._num_users + self._num_items,
-                                              self._num_users + self._num_items))
+        self.edge_index = np.array([row, col])
+        adj = SparseTensor(row=torch.cat([torch.tensor(self.edge_index[0], dtype=torch.int64),
+                                          torch.tensor(self.edge_index[1], dtype=torch.int64)], dim=0),
+                           col=torch.cat([torch.tensor(self.edge_index[1], dtype=torch.int64),
+                                          torch.tensor(self.edge_index[0], dtype=torch.int64)], dim=0),
+                           sparse_sizes=(self._num_users + self._num_items,
+                                         self._num_users + self._num_items))
+        self._general_adj = adj
+        self.users = list(range(self._num_users))
+        self.items = list(range(self._num_users, self._num_users + self._num_items))
+        self.interactions = list(range(self.edge_index.shape[1]))
 
-        self._model = LightGCNModel(
+        self._model = SGLModel(
             num_users=self._num_users,
             num_items=self._num_items,
             learning_rate=self._learning_rate,
             embed_k=self._factors,
             l_w=self._l_w,
             n_layers=self._n_layers,
-            adj=self.adj,
-            normalize=self._normalize,
+            ssl_temp=self._ssl_temp,
+            ssl_reg=self._ssl_reg,
+            sampling=self._sampling,
+            adj=adj,
             random_seed=self._seed
         )
 
     @property
     def name(self):
-        return "LightGCN" \
+        return "SGL" \
                + f"_{self.get_base_params_shortcut()}" \
                + f"_{self.get_params_shortcut()}"
 
@@ -96,11 +120,20 @@ class LightGCN(RecMixin, BaseRecommenderModel):
         for it in self.iterate(self._epochs):
             loss = 0
             steps = 0
-            n_batch = int(self._data.transactions / self._batch_size) if self._data.transactions % self._batch_size == 0 else int(self._data.transactions / self._batch_size) + 1
-            with tqdm(total=n_batch, disable=not self._verbose) as t:
+            if self._sampling in ['nd', 'ed']:
+                adj_1 = self.create_adj_mat(is_subgraph=True, aug_type=self._sampling)
+                adj_2 = self.create_adj_mat(is_subgraph=True, aug_type=self._sampling)
+            elif self._sampling == 'rw':
+                adj_1, adj_2 = [], []
+                for _ in range(self._n_layers):
+                    adj_1.append(self.create_adj_mat(is_subgraph=True, aug_type=self._sampling))
+                    adj_2.append(self.create_adj_mat(is_subgraph=True, aug_type=self._sampling))
+            else:
+                raise NotImplementedError('This sampling strategy has not been implemented yet!')
+            with tqdm(total=int(self._data.transactions // self._batch_size), disable=not self._verbose) as t:
                 for batch in self._sampler.step(self._data.transactions, self._batch_size):
                     steps += 1
-                    loss += self._model.train_step(batch)
+                    loss += self._model.train_step(batch, adj_1, adj_2)
 
                     if math.isnan(loss) or math.isinf(loss) or (not loss):
                         break
@@ -116,10 +149,46 @@ class LightGCN(RecMixin, BaseRecommenderModel):
             self.logger.info(f"Best iteration: {self._params.best_iteration}")
             self.logger.info(f"Current configuration: {self.name}")
 
+    def create_adj_mat(self, is_subgraph=False, aug_type='ed'):
+        if is_subgraph and self._ssl_ratio > 0:
+            if aug_type == 'nd':
+                users_to_drop = random.sample(self.users, round(self._num_users * self._ssl_ratio))
+                items_to_drop = random.sample(self.items, round(self._num_items * self._ssl_ratio))
+                mask_user = ~np.isin(self.edge_index[0], list(users_to_drop))
+                mask_item = ~np.isin(self.edge_index[1], list(items_to_drop))
+                sampled_edge_index = self.edge_index[:, mask_user & mask_item]
+                sampled_edge_index = torch.tensor(sampled_edge_index, dtype=torch.int64)
+                sampled_adj = SparseTensor(row=torch.cat([sampled_edge_index[0], sampled_edge_index[1]], dim=0),
+                                           col=torch.cat([sampled_edge_index[1], sampled_edge_index[0]], dim=0),
+                                           sparse_sizes=(self._num_users + self._num_items,
+                                                         self._num_users + self._num_items))
+            elif aug_type in ['ed', 'rw']:
+                interactions_to_drop = random.sample(self.interactions,
+                                                     round(self.edge_index.shape[1] * self._ssl_ratio))
+                mask_interactions = ~np.isin(np.array(self.interactions), list(interactions_to_drop))
+                sampled_edge_index = self.edge_index[:, mask_interactions]
+                sampled_edge_index = torch.tensor(sampled_edge_index, dtype=torch.int64)
+                sampled_adj = SparseTensor(row=torch.cat([sampled_edge_index[0], sampled_edge_index[1]], dim=0),
+                                           col=torch.cat([sampled_edge_index[1], sampled_edge_index[0]], dim=0),
+                                           sparse_sizes=(self._num_users + self._num_items,
+                                                         self._num_users + self._num_items))
+
+            else:
+                raise NotImplementedError('This sampling strategy has not been implemented yet!')
+        else:
+            edge_index = torch.tensor(self.edge_index, dtype=torch.int64)
+            return SparseTensor(row=torch.cat([edge_index[0], edge_index[1]], dim=0),
+                                col=torch.cat([edge_index[1], edge_index[0]], dim=0),
+                                sparse_sizes=(self._num_users + self._num_items,
+                                              self._num_users + self._num_items))
+        return sampled_adj
+
     def get_recommendations(self, k: int = 100):
         predictions_top_k_test = {}
         predictions_top_k_val = {}
-        gu, gi = self._model.propagate_embeddings(evaluate=True)
+        self._model.eval()
+        gu, gi = self._model.propagate_embeddings(self._general_adj)
+        self._model.train()
         for index, offset in enumerate(range(0, self._num_users, self._batch_size)):
             offset_stop = min(offset + self._batch_size, self._num_users)
             predictions = self._model.predict(gu[offset: offset_stop], gi)
@@ -144,7 +213,7 @@ class LightGCN(RecMixin, BaseRecommenderModel):
             self._results.append(result_dict)
 
             if it is not None:
-                self.logger.info(f'Epoch {(it + 1)}/{self._epochs} loss {loss/(it + 1):.5f}')
+                self.logger.info(f'Epoch {(it + 1)}/{self._epochs} loss {loss / (it + 1):.5f}')
             else:
                 self.logger.info(f'Finished')
 
@@ -161,7 +230,8 @@ class LightGCN(RecMixin, BaseRecommenderModel):
                 if it is not None:
                     self._params.best_iteration = it + 1
                 self.logger.info("******************************************")
-                self.best_metric_value = self._results[-1][self._validation_k]["val_results"][self._validation_metric]
+                self.best_metric_value = self._results[-1][self._validation_k]["val_results"][
+                    self._validation_metric]
                 if self._save_weights:
                     if hasattr(self, "_model"):
                         torch.save({
