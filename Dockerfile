@@ -1,11 +1,8 @@
-FROM nvidia/cuda:10.2-cudnn8-devel-ubuntu18.04
+FROM nvidia/cuda:11.8.0-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-key del 7fa2af80 && \
-    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub && \
-    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64/7fa2af80.pub && \
-    apt-get update -y && \
+RUN apt-get update -y && \
     apt-get install -y unzip git curl software-properties-common && \
     add-apt-repository ppa:deadsnakes/ppa -y && \
     apt-get install -y python3.8 python3.8-distutils && \
