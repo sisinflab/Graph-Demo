@@ -12,4 +12,4 @@ services:
           devices:
             - capabilities: [gpu]
     volumes:
-      - ./results:/Graph-Demo-WSDM2023/results
+      - ./results:/Graph-Demo/results
