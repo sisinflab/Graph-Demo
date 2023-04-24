@@ -204,8 +204,7 @@ sudo docker compose run demo-graph
 Then, select:
 
 - Model: ```ngcf```
-- Number of explored hops: ```3```
-- Dataset: ```amazon digital music```
+- Dataset: ```gowalla```
 
 
 ### 2. Train and evaluate GFCF (no message-passing)
@@ -215,8 +214,7 @@ sudo docker compose run demo-graph
 Then, select:
 
 - Model: ```gfcf```
-- Number of explored hops: ```0```
-- Dataset: ```amazon digital music```
+- Dataset: ```gowalla```
 
 ## Video Tutorial
 If you need a practical guide to install and launch our application, click on the image below to go to the video tutorial on YouTube.
@@ -226,8 +224,8 @@ Video link: https://youtu.be/Zeet08LNVBg
 <a href="https://youtu.be/Zeet08LNVBg"><img src="video_wsdm.png" align="left"></a>
 
 ## Contacts
+- Daniele Malitesta (daniele.malitesta@poliba.it)
+- Claudio Pomo (claudio.pomo@poliba.it)
 - Vito Walter Anelli (vitowalter.anelli@poliba.it)
 - Tommaso Di Noia (tommaso.dinoia@poliba.it)
 - Antonio Ferrara (antonio.ferrara@poliba.it)
-- Daniele Malitesta (daniele.malitesta@poliba.it)
-- Claudio Pomo (claudio.pomo@poliba.it)
