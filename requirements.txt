@@ -1,13 +1,7 @@
 --extra-index-url https://download.pytorch.org/whl/cu102
--f https://data.pyg.org/whl/torch-1.12.0+cu102.html
 hyperopt
 numpy
 torch==1.12.0+cu102
-torch_geometric
-torch-scatter
-torch_sparse
-torch_cluster
-torch_spline_conv
 tensorflow
 tqdm
 scipy
@@ -17,3 +11,4 @@ PyYAML
 scikit_learn
 sparsesvd
 gdown
+-r requirements_torch_geometric.txt
