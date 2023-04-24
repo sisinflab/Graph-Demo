@@ -1,13 +1,11 @@
--f https://download.pytorch.org/whl/gpu/torch_stable.html
--f https://data.pyg.org/whl/torch-1.11.0+cu102.html
 hyperopt
 numpy
 torch==1.11.0
-torch-scatter
-torch-sparse
-torch-cluster
-torch-spline-conv
-torch-geometric
+torch-scatter -f https://data.pyg.org/whl/torch-1.11.0+cu102.html
+torch-sparse -f https://data.pyg.org/whl/torch-1.11.0+cu102.html
+torch-cluster -f https://data.pyg.org/whl/torch-1.11.0+cu102.html
+torch-spline-conv -f https://data.pyg.org/whl/torch-1.11.0+cu102.html
+torch-geometric -f https://data.pyg.org/whl/torch-1.11.0+cu102.html
 tensorflow
 tqdm
 scipy
@@ -15,5 +13,4 @@ pandas
 Pillow
 PyYAML
 scikit_learn
-sparsesvd
 gdown
