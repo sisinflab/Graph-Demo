@@ -219,9 +219,7 @@ Then, select:
 ## Video Tutorial
 If you need a practical guide to install and launch our application, click on the image below to go to the video tutorial on YouTube.
 
-Video link: https://youtu.be/Zeet08LNVBg
-
-<a href="https://youtu.be/Zeet08LNVBg"><img src="video_wsdm.png" align="left"></a>
+Video link: https://www.youtube.com/watch?v=_Bpgf4wnwIU
 
 ## Contacts
 - Daniele Malitesta (daniele.malitesta@poliba.it)
