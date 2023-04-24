@@ -1,6 +1,6 @@
 hyperopt
 numpy
-torch==1.12.0+cu102
+torch==1.12.0
 torch_geometric -f https://data.pyg.org/whl/torch-1.12.0+cu102.html
 torch-scatter -f https://data.pyg.org/whl/torch-1.12.0+cu102.html
 torch_sparse -f https://data.pyg.org/whl/torch-1.12.0+cu102.html
