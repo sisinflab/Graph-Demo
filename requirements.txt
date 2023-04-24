@@ -9,5 +9,5 @@ pandas
 Pillow
 PyYAML
 scikit_learn
-sparsesvd
+sparsesvd==0.2.0
 gdown
