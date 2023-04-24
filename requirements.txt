@@ -1,5 +1,5 @@
 --index-url https://download.pytorch.org/whl/cu118
-cython3
+Cython
 hyperopt
 numpy
 torch
