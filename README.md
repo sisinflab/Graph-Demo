@@ -225,7 +225,7 @@ Video link: https://www.youtube.com/watch?v=_Bpgf4wnwIU
 
 ## Contacts
 - **Daniele Malitesta (daniele.malitesta@poliba.it)**
-- **Claudio Pomo* (claudio.pomo@poliba.it)**
+- **Claudio Pomo (claudio.pomo@poliba.it)**
 - Vito Walter Anelli (vitowalter.anelli@poliba.it)
 - Tommaso Di Noia (tommaso.dinoia@poliba.it)
 - Antonio Ferrara (antonio.ferrara@poliba.it)
