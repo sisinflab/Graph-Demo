@@ -4,7 +4,7 @@ This is the official implementation of the paper _An Out-of-the-Box Application 
 
 **Authors**: Daniele Malitesta*, Claudio Pomo*, Vito Walter Anelli, Tommaso Di Noia, Antonio Ferrara
 
-* Corresponding authors.
+\* Corresponding authors.
 
 ## Table of Contents
 - [Abstract](#abstract)
