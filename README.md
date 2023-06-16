@@ -1,5 +1,7 @@
 # An Out-of-the-Box Application for Reproducible Graph Collaborative Filtering extending the Elliot Framework
 
+<img src="https://raw.githubusercontent.com/sisinflab/Ducho/main/docs/source/img/ducho_img.png"  width="600">
+
 This is the official implementation of the paper _An Out-of-the-Box Application for Reproducible Graph Collaborative Filtering extending the Elliot Framework_, accepted as demo paper at UMAP 2023.
 
 **Authors**: Daniele Malitesta*, Claudio Pomo*, Vito Walter Anelli, Tommaso Di Noia, Antonio Ferrara
