@@ -8,6 +8,8 @@ This is the official implementation of the paper _An Out-of-the-Box Application 
 
 \* Corresponding authors.
 
+Here you may find our public Docker image: https://hub.docker.com/r/sisinflabpoliba/demo-graph.
+
 ## Table of Contents
 - [Abstract](#abstract)
 - [Pre-requisites](#pre-requisites)
