@@ -1,8 +1,14 @@
 # An Out-of-the-Box Application for Reproducible Graph Collaborative Filtering extending the Elliot Framework
 
-This is the official implementation of the paper _An Out-of-the-Box Application for Reproducible Graph Collaborative Filtering extending the Elliot Framework_, under review as demo paper at UMAP 2023.
+<img src="https://github.com/sisinflab/Graph-Demo/blob/main/graph-elliot.png"  width="300">
 
-**Authors**: Daniele Malitesta, Claudio Pomo, Vito Walter Anelli, Tommaso Di Noia, Antonio Ferrara
+This is the official implementation of the paper _An Out-of-the-Box Application for Reproducible Graph Collaborative Filtering extending the Elliot Framework_, accepted as demo paper at UMAP 2023.
+
+**Authors**: Daniele Malitesta*, Claudio Pomo*, Vito Walter Anelli, Tommaso Di Noia, Antonio Ferrara
+
+\* Corresponding authors.
+
+Here you may find our public Docker image: https://hub.docker.com/r/sisinflabpoliba/demo-graph.
 
 ## Table of Contents
 - [Abstract](#abstract)
@@ -15,6 +21,7 @@ This is the official implementation of the paper _An Out-of-the-Box Application 
 - [Contacts](#contacts)
 
 ## Abstract
+
 Graph convolutional networks (GCNs) are taking over collaborative filtering-based recommendation. Their message-passing schema effectively distills the collaborative signal throughout the user-item graph by propagating informative content from neighbor to ego nodes. In this demonstration, we show how to run complete experimental pipelines with six state-of-the-art graph recommendation models in Elliot (i.e., our framework for recommender system evaluation). We seek to highlight four main features, namely: (i) we support reproducibility in PyTorch Geometric (i.e., the library we use to implement the baselines); (ii) reproduced graph models span across various GCN families; (iii) we allow to easily run ablation studies on the number of explored hops; (iv) we prepare a Docker image to provide a self-consistent ecosystem for the running of experiments. Codes, datasets, and a video tutorial to install and launch the application are accessible at https://github.com/sisinflab/Graph-Demo.
 
 ## Pre-requisites
@@ -219,13 +226,11 @@ Then, select:
 ## Video Tutorial
 If you need a practical guide to install and launch our application, click on the image below to go to the video tutorial on YouTube.
 
-Video link: https://youtu.be/Zeet08LNVBg
-
-<a href="https://youtu.be/Zeet08LNVBg"><img src="video_wsdm.png" align="left"></a>
+Video link: https://www.youtube.com/watch?v=_Bpgf4wnwIU
 
 ## Contacts
-- Daniele Malitesta (daniele.malitesta@poliba.it)
-- Claudio Pomo (claudio.pomo@poliba.it)
+- **Daniele Malitesta (daniele.malitesta@poliba.it)**
+- **Claudio Pomo (claudio.pomo@poliba.it)**
 - Vito Walter Anelli (vitowalter.anelli@poliba.it)
 - Tommaso Di Noia (tommaso.dinoia@poliba.it)
 - Antonio Ferrara (antonio.ferrara@poliba.it)
